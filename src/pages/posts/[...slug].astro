@@ -1,0 +1,40 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  const now = new Date();
+
+  return posts
+    .filter((post) => !post.data.draft && post.data.pubDatetime <= now)
+    .map((post) => ({
+      params: { slug: post.slug },
+      props: { post }
+    }));
+}
+
+const { post } = Astro.props as { post: CollectionEntry<"posts"> };
+const { Content } = await post.render();
+---
+
+<BaseLayout title={`${post.data.title} | 디지털 접근성 뉴스`} description={post.data.description}>
+  <article>
+    <div class="prose">
+      <div class="title">
+        <div class="date">
+          <time datetime={post.data.pubDatetime.toISOString()}>
+            {post.data.pubDatetime.toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "long",
+              day: "numeric"
+            })}
+          </time>
+        </div>
+        <h1>{post.data.title}</h1>
+        <hr />
+      </div>
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

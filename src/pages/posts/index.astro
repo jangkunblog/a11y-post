@@ -1,0 +1,34 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostCard from "../../components/PostCard.astro";
+import { getVisiblePosts } from "../../utils/posts";
+
+const allPosts = getVisiblePosts(await getCollection("posts"));
+const selectedTag = Astro.url.searchParams.get("tag");
+const posts = selectedTag
+  ? allPosts.filter((post) => post.data.tags.includes(selectedTag))
+  : allPosts;
+---
+
+<BaseLayout title="게시물 | 디지털 접근성 뉴스" description="모든 게시글 목록">
+  <section>
+    <h1>게시물 아카이브</h1>
+    {
+      selectedTag && (
+        <p>
+          태그 필터: <strong>#{selectedTag}</strong> · <a href="/posts/">초기화</a>
+        </p>
+      )
+    }
+    {posts.length === 0 ? (
+      <p>조건에 맞는 포스트가 없습니다.</p>
+    ) : (
+      <ul class="post-list">
+        {posts.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </ul>
+    )}
+  </section>
+</BaseLayout>

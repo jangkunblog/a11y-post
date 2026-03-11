@@ -1,0 +1,25 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+}
+
+const { post } = Astro.props;
+---
+
+<li class="post-list-item">
+  <h2 class="post-title">
+    <a href={`/posts/${post.slug}/`}>{post.data.title}</a>
+  </h2>
+  <p class="post-date">
+    <time datetime={post.data.pubDatetime.toISOString()}>
+      {post.data.pubDatetime.toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      })}
+    </time>
+  </p>
+  <p class="post-description">{post.data.description}</p>
+</li>

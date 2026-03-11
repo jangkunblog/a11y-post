@@ -1,0 +1,87 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "디지털 접근성 뉴스",
+  description = "웹 접근성과 디지털 포용 관련 글을 정리하는 뉴스 아카이브"
+} = Astro.props;
+
+const pathname = Astro.url.pathname;
+const normalizedPath = pathname.endsWith("/") ? pathname : `${pathname}/`;
+const isHome = normalizedPath === "/";
+const isPostsIndex = normalizedPath === "/posts/";
+const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== "/posts/";
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+    <div class="scroll-progress" aria-hidden="true">
+      <span class="scroll-progress-bar"></span>
+    </div>
+    <header class="site-header">
+      <nav class="site-nav" aria-label="주 메뉴">
+        <h2 class="brand"><a href="/">디지털 접근성 뉴스</a></h2>
+      </nav>
+    </header>
+    <main
+      id="main-content"
+      class:list={[
+        "site-main",
+        isHome && "home-page",
+        isPostsIndex && "blog-page",
+        isPostDetail && "post-page"
+      ]}
+    >
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>&copy; 2026 디지털 접근성 뉴스. All rights reserved.</p>
+    </footer>
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        let ticking = false;
+
+        const updateProgress = () => {
+          const maxScrollable = root.scrollHeight - window.innerHeight;
+          const progress = maxScrollable > 0 ? window.scrollY / maxScrollable : 1;
+          const clamped = Math.min(Math.max(progress, 0), 1);
+          root.style.setProperty("--scroll-progress", String(clamped));
+          ticking = false;
+        };
+
+        const onScroll = () => {
+          if (!ticking) {
+            requestAnimationFrame(updateProgress);
+            ticking = true;
+          }
+        };
+
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", updateProgress);
+        window.addEventListener("load", updateProgress);
+        updateProgress();
+      })();
+    </script>
+  </body>
+</html>
