@@ -6,7 +6,7 @@ export async function GET(context: { site: URL }) {
   const posts = getVisiblePosts(await getCollection("posts"));
 
   return rss({
-    title: "A11Y Hot Blog",
+    title: "디지털 접근성 아카이브",
     description: "키워드 기반 자동 초안 + PR 검토 발행 아카이브",
     site: context.site,
     items: posts.map((post) => ({
