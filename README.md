@@ -43,7 +43,7 @@ Secret이 없거나 호출에 실패하면, 내장 템플릿으로 초안을 생
 
 ## GitHub Actions + Vercel 자동 배포
 
-`main` 브랜치에 푸시되면 `.github/workflows/deploy-vercel.yml`이 실행되어
+PR이 `main`에 **머지**되면 `.github/workflows/deploy-vercel.yml`이 실행되어
 Vercel로 프로덕션 배포합니다.
 
 GitHub 저장소 Secrets에 아래 값을 추가해야 합니다.
@@ -51,6 +51,17 @@ GitHub 저장소 Secrets에 아래 값을 추가해야 합니다.
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
+
+## PR 승인 후 발행(권장)
+
+키워드 기반 글 생성은 PR을 만들고, 배포는 머지 후에만 실행되도록 구성되어 있습니다.
+승인 절차를 강제하려면 GitHub 저장소에서 브랜치 보호 규칙을 추가합니다.
+
+- `Settings > Branches > Add branch protection rule`
+- Branch name pattern: `main`
+- `Require a pull request before merging` 활성화
+- `Require approvals`를 `1` 이상으로 설정
+- (선택) `Require review from Code Owners` 활성화
 
 ## Vercel 설정
 

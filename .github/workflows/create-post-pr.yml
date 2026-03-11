@@ -15,7 +15,7 @@ on:
       draft:
         description: "Draft 상태로 생성"
         required: true
-        default: true
+        default: false
         type: boolean
 
 jobs:
