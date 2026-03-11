@@ -26,7 +26,7 @@ npm run dev
 ## 관리자 발행 흐름
 
 1. GitHub 저장소의 **Actions** 탭에서 `Create Post PR From Keyword` 실행
-2. `keyword` 입력
+2. `topic` 입력
 3. 워크플로우가 `src/content/posts/*.md` 초안 생성 + PR 자동 오픈
 4. PR에서 내용 수정/리뷰
 5. `main` 머지

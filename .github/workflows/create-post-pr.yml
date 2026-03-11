@@ -1,22 +1,13 @@
 name: Create Post PR From Keyword
+run-name: "Create post PR: ${{ inputs.topic }}"
 
 on:
   workflow_dispatch:
     inputs:
-      keyword:
-        description: "포스트 생성 키워드"
+      topic:
+        description: "포스팅 주제"
         required: true
         type: string
-      featured:
-        description: "Featured 섹션에 노출"
-        required: true
-        default: false
-        type: boolean
-      draft:
-        description: "Draft 상태로 생성"
-        required: true
-        default: false
-        type: boolean
 
 jobs:
   create-post-pr:
@@ -45,20 +36,20 @@ jobs:
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
         run: |
           npm run post:generate -- \
-            --keyword "${{ inputs.keyword }}" \
-            --featured "${{ inputs.featured }}" \
-            --draft "${{ inputs.draft }}"
+            --keyword "${{ inputs.topic }}" \
+            --featured "false" \
+            --draft "false"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
           branch: codex/post-${{ github.run_id }}
-          commit-message: "docs: draft post for '${{ inputs.keyword }}'"
-          title: "docs: 키워드 '${{ inputs.keyword }}' 포스트 초안"
+          commit-message: "docs: draft post for '${{ inputs.topic }}'"
+          title: "docs: 키워드 '${{ inputs.topic }}' 포스트 초안"
           body: |
             ## 자동 생성된 포스트 초안
 
-            - Keyword: `${{ inputs.keyword }}`
+            - Topic: `${{ inputs.topic }}`
             - File: `${{ steps.generate.outputs.post_path }}`
             - Slug: `${{ steps.generate.outputs.post_slug }}`
             - Source: `${{ steps.generate.outputs.post_source }}`
