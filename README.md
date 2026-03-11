@@ -37,8 +37,9 @@ npm run dev
 GitHub 저장소 Secret에 아래를 설정하면 키워드 기반 본문을 AI로 생성합니다.
 
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL` (선택, 미설정 시 Codex 계열 기본 모델 사용)
+- `OPENAI_MODEL` (선택, 미설정 시 `gpt-4o-mini`)
 
+생성 시 `AGENTS.md`의 작성 규칙과 `src/content/posts`의 전체 기존 글(제목/리드/헤딩 요약)을 참고해 문체와 구조를 맞춥니다.  
 Secret이 없거나 호출에 실패하면, 내장 템플릿으로 초안을 생성합니다.
 
 ## GitHub Actions + Vercel 자동 배포

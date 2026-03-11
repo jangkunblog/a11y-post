@@ -1,4 +1,4 @@
-import { access, appendFile, mkdir, writeFile } from "node:fs/promises";
+import { access, appendFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 
@@ -136,6 +136,144 @@ function cleanupTags(tags, keyword) {
   return ["a11y", "frontend", "keyword", keywordSlugToken(keyword)].slice(0, 4);
 }
 
+function normalizeWhitespace(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function parseFrontmatter(markdown) {
+  const match = markdown.match(/^---\n([\s\S]*?)\n---\n?/);
+  if (!match) {
+    return { frontmatter: "", body: markdown };
+  }
+
+  const frontmatter = match[1] || "";
+  const body = markdown.slice(match[0].length);
+  return { frontmatter, body };
+}
+
+function frontmatterValue(frontmatter, key) {
+  const regex = new RegExp(`^${key}:\\s*(.+)$`, "m");
+  const match = frontmatter.match(regex);
+  if (!match) {
+    return "";
+  }
+
+  return normalizeWhitespace(match[1].replace(/^["']|["']$/g, ""));
+}
+
+function extractHeadings(body, level = 2, limit = 4) {
+  const hashes = "#".repeat(level);
+  const regex = new RegExp(`^${hashes}\\s+(.+)$`, "gm");
+  const list = [];
+  let match = regex.exec(body);
+  while (match && list.length < limit) {
+    const heading = normalizeWhitespace(match[1].replace(/\s*#+\s*$/g, ""));
+    if (heading) {
+      list.push(heading);
+    }
+    match = regex.exec(body);
+  }
+  return list;
+}
+
+function extractLeadParagraphs(body, paragraphLimit = 2) {
+  const lines = String(body || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .filter((line) => !line.startsWith("#"))
+    .filter((line) => !line.startsWith("```"))
+    .filter((line) => !line.startsWith("<!--"))
+    .filter((line) => !line.startsWith("- "))
+    .filter((line) => !/^\d+\.\s/.test(line));
+
+  const paragraphs = [];
+  for (const line of lines) {
+    paragraphs.push(line);
+    if (paragraphs.length >= paragraphLimit) {
+      break;
+    }
+  }
+
+  return normalizeWhitespace(paragraphs.join(" "));
+}
+
+async function loadBlogWritingRules() {
+  const agentsPath = path.join(process.cwd(), "AGENTS.md");
+  try {
+    const content = await readFile(agentsPath, "utf8");
+    const lines = content.split("\n");
+    const startIndex = lines.findIndex((line) => line.trim() === "## Blog Writing Default");
+    if (startIndex === -1) {
+      return "";
+    }
+
+    const ruleLines = [];
+    for (let i = startIndex + 1; i < lines.length; i += 1) {
+      const line = lines[i];
+      if (line.startsWith("## ")) {
+        break;
+      }
+      if (line.trim().startsWith("- ")) {
+        ruleLines.push(line.trim());
+      }
+    }
+
+    return ruleLines.join("\n");
+  } catch {
+    return "";
+  }
+}
+
+async function loadPostCorpusSummary() {
+  const postsDir = path.join(process.cwd(), "src", "content", "posts");
+
+  let filenames = [];
+  try {
+    filenames = (await readdir(postsDir)).filter((name) => name.endsWith(".md")).sort();
+  } catch {
+    return "";
+  }
+
+  const entries = [];
+  for (const filename of filenames) {
+    try {
+      const filePath = path.join(postsDir, filename);
+      const markdown = await readFile(filePath, "utf8");
+      const { frontmatter, body } = parseFrontmatter(markdown);
+      const title = frontmatterValue(frontmatter, "title") || filename.replace(/\.md$/, "");
+      const h2 = extractHeadings(body, 2, 4);
+      const h3 = extractHeadings(body, 3, 4);
+      const lead = extractLeadParagraphs(body, 2).slice(0, 280);
+
+      entries.push(
+        [
+          `- file: ${filename}`,
+          `  title: ${title}`,
+          `  h2: ${h2.length > 0 ? h2.join(" | ") : "none"}`,
+          `  h3: ${h3.length > 0 ? h3.join(" | ") : "none"}`,
+          `  lead: ${lead || "none"}`
+        ].join("\n")
+      );
+    } catch {
+      // Ignore broken files and continue with the rest.
+    }
+  }
+
+  const joined = entries.join("\n");
+  if (joined.length <= 12000) {
+    return joined;
+  }
+
+  // Keep all titles/headings while trimming lead text if corpus grows.
+  const compactEntries = [];
+  for (const entry of entries) {
+    const lines = entry.split("\n");
+    compactEntries.push(lines.filter((line) => !line.trim().startsWith("lead:")).join("\n"));
+  }
+  return compactEntries.join("\n");
+}
+
 function fallbackPayload(keyword) {
   const topic = normalizeTopicKeyword(keyword);
 
@@ -221,10 +359,13 @@ function fallbackPayload(keyword) {
   };
 }
 
-async function generateWithOpenAI(keyword, topic) {
+async function generateWithOpenAI(keyword, topic, options = {}) {
   if (!process.env.OPENAI_API_KEY) {
     return null;
   }
+
+  const writingRules = options.writingRules || "";
+  const postCorpusSummary = options.postCorpusSummary || "";
 
   // Default to a chat-capable model; can be overridden by OPENAI_MODEL.
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -242,11 +383,11 @@ async function generateWithOpenAI(keyword, topic) {
         {
           role: "system",
           content:
-            "당신은 시니어 기술 블로그 편집자다. 한국어로 작성하고 JSON만 반환한다. 필드: title, description, tags(string[]), body(markdown). 장군블로그 스타일을 기본으로 적용한다: 오해 바로잡기형 도입, 개념 정의, 표준 근거(날짜 포함), 올바른 사용법, 잘못된 사례, 개발 검수 방법, 마무리 순서. body는 상세 long-form으로 작성하며 최소 H2 9개, H3 12개 이상을 유지하고 단계형 가이드와 체크리스트, 코드/템플릿 예시를 포함한다. 문단은 단문 나열을 피하고 3~6문장 산문형으로 작성하되, 비교/절차/요약/체크포인트처럼 논리 전달이 더 명확해지는 구간은 리스트(불릿/번호)를 우선 사용한다. 표준/스펙 주제는 반드시 요구사항, 동작 원리, 입력 규칙, 유효/무효 사례, 검수 방법을 포함해 오해를 줄인다. h1/h2/h3 제목에는 숫자 넘버링(예: 1., 1), 01.)을 사용하지 않는다. 글은 특정 조직 내부 문서가 아니라 공개 포스팅으로 작성하고, `우리 팀/팀이 해야 한다` 같은 특정 집단 주어를 남발하지 않는다. 필요할 때는 `우리가` 또는 무주어 문장을 사용한다. 문장 종결은 기본적으로 `-다/-이다` 체로 통일한다. 한국 실무에서 낯선 어려운 용어는 쉬운 한국어로 바꾸고, 필요할 때만 첫 등장에 영어 원어를 괄호로 병기한다. 기술·사회·인문 맥락을 연결하되 과장 없이 근거 중심의 실무 톤을 유지한다."
+            `당신은 시니어 기술 블로그 편집자다. 한국어로 작성하고 JSON만 반환한다. 필드: title, description, tags(string[]), body(markdown).\n\n반드시 지킬 작성 원칙:\n- 저장소의 기존 글 전체 문체를 일관되게 따른다.\n- 오해 바로잡기형 도입 -> 개념 정의 -> 표준 근거(날짜 포함) -> 올바른 사용법 -> 잘못된 사례 -> 검수 방법 -> 마무리 순서를 따른다.\n- body는 상세 long-form으로 작성하며 최소 H2 9개, H3 12개 이상을 유지하고 단계형 가이드와 체크리스트를 포함한다.\n- 문단은 단문 나열을 피하고 3~6문장 산문형으로 작성하되, 비교/절차/요약/체크포인트는 리스트(불릿/번호)를 사용한다.\n- 표준/스펙 주제는 반드시 요구사항, 동작 원리, 입력 규칙, 유효/무효 사례, 검수 방법을 포함한다.\n- h1/h2/h3 제목에는 숫자 넘버링을 넣지 않는다.\n- 문장은 기본적으로 -다/-이다 체로 작성한다.\n- 특정 조직 내부 문서처럼 쓰지 않고 공개 포스팅 톤으로 작성한다. '우리 팀', '독자' 같은 주어를 남발하지 않는다.\n- 한국 실무에서 어색한 어려운 용어는 쉬운 한국어로 풀고, 필요한 경우 첫 등장에만 영어 원어를 괄호로 병기한다.\n- 과장된 홍보 문구 없이 근거 중심으로 작성한다.\n\n프로젝트의 AGENTS 작성 규칙:\n${writingRules || "- (rules unavailable)"}\n`
         },
         {
           role: "user",
-          content: `요청 원문: ${keyword}\n핵심 주제: ${topic}\n\n핵심 주제를 중심으로 블로그 초안을 작성해줘. 오해하기 쉬운 지점을 먼저 정리하고, 표준 근거와 잘못된 사례를 포함해 실무형 가이드로 작성해줘.`
+          content: `요청 원문: ${keyword}\n핵심 주제: ${topic}\n\n아래는 저장소의 기존 포스트 전체에서 추출한 요약이다. 특정 2개 글이 아니라 전체 패턴을 참고해서 제목/문단 톤/전개 구조/밀도를 맞춰라.\n\n[existing-post-corpus]\n${postCorpusSummary || "(corpus unavailable)"}\n[/existing-post-corpus]\n\n핵심 주제를 중심으로 블로그 초안을 작성해줘. 오해하기 쉬운 지점을 먼저 정리하고, 표준 근거와 잘못된 사례를 포함해 실무형 가이드로 작성해줘.`
         }
       ]
     })
@@ -277,7 +418,7 @@ async function generateWithOpenAI(keyword, topic) {
   return {
     title: String(payload.title).trim(),
     description: String(payload.description).trim(),
-    tags: cleanupTags(payload.tags, keyword),
+    tags: cleanupTags(payload.tags, topic),
     body: String(payload.body).trim()
   };
 }
@@ -322,9 +463,16 @@ const slugBase = keywordSlugToken(topic);
 
 let payload = fallbackPayload(topic);
 let source = "fallback-template";
+const [writingRules, postCorpusSummary] = await Promise.all([
+  loadBlogWritingRules(),
+  loadPostCorpusSummary()
+]);
 
 try {
-  const openaiPayload = await generateWithOpenAI(keyword, topic);
+  const openaiPayload = await generateWithOpenAI(keyword, topic, {
+    writingRules,
+    postCorpusSummary
+  });
   if (openaiPayload) {
     payload = openaiPayload;
     source = "openai";
