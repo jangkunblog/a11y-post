@@ -7,7 +7,7 @@ interface Props {
 }
 
 const {
-  title = "디지털 접근성 뉴스",
+  title = "디지털 접근성 아카이브",
   description = "웹 접근성과 디지털 포용 관련 글을 정리하는 뉴스 아카이브"
 } = Astro.props;
 
@@ -40,7 +40,7 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
     </div>
     <header class="site-header">
       <nav class="site-nav" aria-label="주 메뉴">
-        <h2 class="brand"><a href="/">디지털 접근성 뉴스</a></h2>
+        <h2 class="brand"><a href="/">디지털 접근성 아카이브</a></h2>
       </nav>
     </header>
     <main
@@ -55,7 +55,7 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
       <slot />
     </main>
     <footer class="site-footer">
-      <p>&copy; 2026 디지털 접근성 뉴스. All rights reserved.</p>
+      <p>&copy; 2026 디지털 접근성 아카이브. All rights reserved.</p>
     </footer>
     <script is:inline>
       (() => {

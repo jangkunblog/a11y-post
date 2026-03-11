@@ -18,7 +18,7 @@ const { post } = Astro.props as { post: CollectionEntry<"posts"> };
 const { Content } = await post.render();
 ---
 
-<BaseLayout title={`${post.data.title} | 디지털 접근성 뉴스`} description={post.data.description}>
+<BaseLayout title={`${post.data.title} | 디지털 접근성 아카이브`} description={post.data.description}>
   <article>
     <div class="prose">
       <div class="title">
