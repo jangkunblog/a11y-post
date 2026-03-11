@@ -1,20 +1,19 @@
 # A11Y Hot Blog
 
-`reference/a11y-weekly` 스킬의 발행 방식(초안 생성 + 검토 후 발행)과
-`https://blog.fe4all.dev/`의 블로그 컨셉을 참고해 만든 Astro 기반 블로그입니다.
+Astro 기반 블로그이며, 발행 흐름은 로컬 작성 중심으로 운영한다.
 
 핵심 목표:
 
-- 관리자 키워드 입력으로 글 초안 생성
+- 로컬에서 포스트 생성/수정
 - GitHub Pull Request에서 리뷰
-- 머지 시 Vercel 배포로 발행
+- `main` 머지 시 Vercel 자동 배포
 
 ## Stack
 
 - Astro 5
 - Markdown content collection
-- GitHub Actions (`Deploy To Vercel` 수동 실행으로 키워드 -> PR 자동 생성)
-- Vercel (main 머지 배포)
+- GitHub Actions (PR 빌드 검증 + `main` 배포)
+- Vercel
 
 ## 로컬 실행
 
@@ -23,57 +22,57 @@ npm install
 npm run dev
 ```
 
-## 관리자 발행 흐름
+## 로컬 포스트 생성
 
-1. GitHub 저장소의 **Actions** 탭에서 `Deploy To Vercel` 실행
-2. `topic` 입력 후 `Run workflow` 실행
-3. 워크플로우가 `src/content/posts/*.md` 초안 생성 + PR 자동 오픈
-4. PR에서 내용 수정/리뷰
+키워드 기반 초안 생성:
+
+```bash
+npm run post:generate -- --keyword "주제 문장"
+```
+
+- 생성 파일: `src/content/posts/YYYY-MM-DD-*.md`
+- 생성기는 `AGENTS.md` 작성 규칙과 `src/content/posts` 전체 기존 글 패턴을 참고한다.
+- `OPENAI_API_KEY`가 없거나 호출 실패 시 내장 템플릿으로 생성한다.
+
+## 발행 흐름
+
+1. 로컬에서 포스트 생성/수정
+2. 기능 브랜치 생성 후 커밋
+3. 원격 push 후 PR 생성
+4. PR 리뷰/승인
 5. `main` 머지
-6. 머지 이벤트로 `Deploy To Vercel` 배포 잡 자동 실행
+6. 머지로 인한 `main` push 시 Vercel 배포 워크플로우 자동 실행
 
 ## OpenAI 연동 (선택)
 
-GitHub 저장소 Secret에 아래를 설정하면 키워드 기반 본문을 AI로 생성합니다.
+로컬 생성 품질을 높이려면 환경 변수 또는 CI Secret으로 다음을 설정한다.
 
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL` (선택, 미설정 시 `gpt-4o-mini`)
-
-생성 시 `AGENTS.md`의 작성 규칙과 `src/content/posts`의 전체 기존 글(제목/리드/헤딩 요약)을 참고해 문체와 구조를 맞춥니다.  
-Secret이 없거나 호출에 실패하면, 내장 템플릿으로 초안을 생성합니다.
+- `OPENAI_MODEL` (선택, 기본값 `gpt-4o-mini`)
 
 ## GitHub Actions + Vercel 자동 배포
 
-PR이 `main`에 **머지**되면 `.github/workflows/deploy-vercel.yml`이 실행되어
-Vercel로 프로덕션 배포합니다.
+`.github/workflows/deploy-vercel.yml`는 `main` 브랜치 push(= PR 머지 후)에서만 실행된다.
 
-GitHub 저장소 Secrets에 아래 값을 추가해야 합니다.
+필수 GitHub Secrets:
 
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 
-## PR 승인 후 발행(권장)
+## PR 승인 강제(권장)
 
-키워드 기반 글 생성은 PR을 만들고, 배포는 머지 후에만 실행되도록 구성되어 있습니다.
-승인 절차를 강제하려면 GitHub 저장소에서 브랜치 보호 규칙을 추가합니다.
+`main` 보호 규칙:
 
 - `Settings > Branches > Add branch protection rule`
 - Branch name pattern: `main`
 - `Require a pull request before merging` 활성화
-- `Require approvals`를 `1` 이상으로 설정
+- `Require approvals` 1 이상
 - (선택) `Require review from Code Owners` 활성화
-
-## Vercel 설정
-
-- Framework Preset: `Astro`
-- Build Command: `npm run build`
-- Output Directory: `dist`
-- Production Branch: `main`
 
 ## 주요 파일
 
-- `scripts/generate-post-from-keyword.mjs`: 키워드 기반 초안 생성
-- `.github/workflows/deploy-vercel.yml`: 키워드 입력 -> 자동 PR 생성 + PR 머지 시 Vercel 배포
+- `scripts/generate-post-from-keyword.mjs`: 로컬 키워드 초안 생성
 - `.github/workflows/validate-pr.yml`: PR 빌드 검증
-- `src/content/posts/`: 실제 발행 포스트 저장 위치
+- `.github/workflows/deploy-vercel.yml`: `main` 배포
+- `src/content/posts/`: 포스트 저장 위치
