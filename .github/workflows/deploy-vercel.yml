@@ -1,6 +1,12 @@
 name: Deploy To Vercel
 
 on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "포스팅 주제 (입력하면 PR 생성)"
+        required: false
+        type: string
   pull_request:
     types:
       - closed
@@ -8,6 +14,61 @@ on:
       - main
 
 jobs:
+  create-post-pr:
+    if: github.event_name == 'workflow_dispatch' && inputs.topic != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate post draft from topic
+        id: generate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        run: |
+          npm run post:generate -- \
+            --keyword "${{ inputs.topic }}" \
+            --featured "false" \
+            --draft "false"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: codex/post-${{ github.run_id }}
+          commit-message: "docs: draft post for '${{ inputs.topic }}'"
+          title: "docs: 키워드 '${{ inputs.topic }}' 포스트 초안"
+          body: |
+            ## 자동 생성된 포스트 초안
+
+            - Topic: `${{ inputs.topic }}`
+            - File: `${{ steps.generate.outputs.post_path }}`
+            - Slug: `${{ steps.generate.outputs.post_slug }}`
+            - Source: `${{ steps.generate.outputs.post_source }}`
+
+            ## 리뷰 체크리스트
+
+            - [ ] 사실 검증
+            - [ ] 문체/브랜드 톤 정리
+            - [ ] SEO 메타(description, tags) 점검
+            - [ ] draft/featured 설정 확인
+          labels: |
+            content
+            auto-generated
+          delete-branch: true
+
   deploy:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest

@@ -13,7 +13,7 @@
 
 - Astro 5
 - Markdown content collection
-- GitHub Actions (키워드 -> PR 자동 생성)
+- GitHub Actions (`Deploy To Vercel` 수동 실행으로 키워드 -> PR 자동 생성)
 - Vercel (main 머지 배포)
 
 ## 로컬 실행
@@ -25,12 +25,12 @@ npm run dev
 
 ## 관리자 발행 흐름
 
-1. GitHub 저장소의 **Actions** 탭에서 `Create Post PR From Keyword` 실행
-2. `topic` 입력
+1. GitHub 저장소의 **Actions** 탭에서 `Deploy To Vercel` 실행
+2. `topic` 입력 후 `Run workflow` 실행
 3. 워크플로우가 `src/content/posts/*.md` 초안 생성 + PR 자동 오픈
 4. PR에서 내용 수정/리뷰
 5. `main` 머지
-6. Vercel이 자동 빌드/배포
+6. 머지 이벤트로 `Deploy To Vercel` 배포 잡 자동 실행
 
 ## OpenAI 연동 (선택)
 
@@ -73,6 +73,6 @@ GitHub 저장소 Secrets에 아래 값을 추가해야 합니다.
 ## 주요 파일
 
 - `scripts/generate-post-from-keyword.mjs`: 키워드 기반 초안 생성
-- `.github/workflows/create-post-pr.yml`: 키워드 입력 -> 자동 PR 생성
+- `.github/workflows/deploy-vercel.yml`: 키워드 입력 -> 자동 PR 생성 + PR 머지 시 Vercel 배포
 - `.github/workflows/validate-pr.yml`: PR 빌드 검증
 - `src/content/posts/`: 실제 발행 포스트 저장 위치

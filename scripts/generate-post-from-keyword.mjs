@@ -58,10 +58,18 @@ function slugifyKeyword(keyword) {
     .trim()
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 60);
+    .replace(/^-|-$/g, "");
 
-  return normalized || "keyword-post";
+  const tokens = normalized.split("-").filter(Boolean);
+  const uniqueTokens = [];
+  for (const token of tokens) {
+    if (!uniqueTokens.includes(token)) {
+      uniqueTokens.push(token);
+    }
+  }
+
+  const compact = uniqueTokens.join("-").slice(0, 48).replace(/^-|-$/g, "");
+  return compact || "keyword-post";
 }
 
 function keywordHash(keyword) {
@@ -75,6 +83,38 @@ function keywordSlugToken(keyword) {
   }
 
   return `keyword-${keywordHash(keyword)}`;
+}
+
+function normalizeTopicKeyword(keyword) {
+  let topic = String(keyword || "")
+    .replace(/\s+/g, " ")
+    .replace(/^["'`“”‘’]+|["'`“”‘’]+$/g, "")
+    .trim();
+
+  topic = topic
+    .replace(/\blevels?\b/gi, "레벨")
+    .replace(/\s*(정리해줘|설명해줘|작성해줘|알려줘|써줘|해줘)\s*$/i, "")
+    .replace(/\s*(정리하고|설명하고|작성하고)\s*$/i, "")
+    .replace(/[?!.]+$/g, "")
+    .trim();
+
+  if (/wcag/i.test(topic) && /a\s*,?\s*aa\s*,?\s*aaa/i.test(topic)) {
+    return "WCAG 적합성 등급 A, AA, AAA";
+  }
+
+  return topic || "접근성 주제";
+}
+
+function fallbackTitle(topic) {
+  if (/wcag/i.test(topic) && /a\s*,?\s*aa\s*,?\s*aaa/i.test(topic)) {
+    return "WCAG 적합성 등급 A, AA, AAA 완전 가이드";
+  }
+
+  if (/가이드$/.test(topic)) {
+    return topic;
+  }
+
+  return `${topic} 완전 가이드`;
 }
 
 function yamlString(value) {
@@ -97,44 +137,46 @@ function cleanupTags(tags, keyword) {
 }
 
 function fallbackPayload(keyword) {
+  const topic = normalizeTopicKeyword(keyword);
+
   return {
-    title: `${keyword} 완전 가이드: 개념, 표준, 사용법, 이슈까지`,
-    description: `${keyword}의 개념 정의부터 표준 근거, 올바른 사용법, 잘못된 사례, 검수 방법까지 실무 관점으로 정리한 상세 가이드이다.`,
-    tags: ["a11y", "frontend", "insight", keywordSlugToken(keyword)],
+    title: fallbackTitle(topic),
+    description: `${topic}의 개념 정의부터 표준 근거, 올바른 사용법, 잘못된 사례, 검수 방법까지 실무 관점으로 정리한 상세 가이드이다.`,
+    tags: ["a11y", "frontend", "insight", keywordSlugToken(topic)],
     body: [
-      `## ${keyword}를 지금 다시 정의해야 하는 이유`,
+      `## ${topic}를 지금 다시 정의해야 하는 이유`,
       "",
-      `${keyword}는 보통 기능 하나를 소개하는 주제로 소비되지만, 실무에서는 사용자 경험과 운영 구조를 동시에 흔드는 변수로 작동한다. 그래서 처음부터 \"무엇을 만들 것인가\"보다 \"어떤 비용을 줄일 것인가\"를 먼저 정의해야 한다. 특히 서비스가 커질수록 사소해 보이는 설계 결정이 누적되어 접근성, 유지보수성, QA 비용까지 연결되기 때문에, 주제의 범위를 좁게 잡으면 실무 판단이 흔들리기 쉽다.`,
+      `${topic}는 보통 기능 하나를 소개하는 주제로 소비되지만, 실무에서는 사용자 경험과 운영 구조를 동시에 흔드는 변수로 작동한다. 그래서 처음부터 \"무엇을 만들 것인가\"보다 \"어떤 비용을 줄일 것인가\"를 먼저 정의해야 한다. 특히 서비스가 커질수록 사소해 보이는 설계 결정이 누적되어 접근성, 유지보수성, QA 비용까지 연결되기 때문에, 주제의 범위를 좁게 잡으면 실무 판단이 흔들리기 쉽다.`,
       "",
-      `이 가이드는 ${keyword}를 단순 구현 팁이 아니라 우리가 재사용할 수 있는 정리 문서로 설계했다. 따라서 개념 정의와 함께 표준 근거, 적용 단계, 실패 패턴, 검수 루틴을 같이 제시한다. 바로 업무에 적용할 수 있도록 항목별 체크 기준을 명확히 적고, 실제 검토 상황에서 자주 발생하는 오해를 먼저 정리하는 흐름을 따른다.`,
+      `이 가이드는 ${topic}를 단순 구현 팁이 아니라 우리가 재사용할 수 있는 정리 문서로 설계했다. 따라서 개념 정의와 함께 표준 근거, 적용 단계, 실패 패턴, 검수 루틴을 같이 제시한다. 바로 업무에 적용할 수 있도록 항목별 체크 기준을 명확히 적고, 실제 검토 상황에서 자주 발생하는 오해를 먼저 정리하는 흐름을 따른다.`,
       "",
       "## 오해가 생기는 지점",
       "",
-      `${keyword} 관련 논의가 실패하는 가장 흔한 이유는 용어를 같은 말로 쓰지만 서로 다른 기대를 품고 있다는 점이다. 기획은 사용자 시나리오를 말하고, 개발은 구현 제약을 말하며, QA는 재현 가능한 기준을 요구한다. 이때 중간 정의가 빠지면 같은 회의에서 합의한 내용이 실제 작업 단계에서 다른 결과물로 나타난다.`,
+      `${topic} 관련 논의가 실패하는 가장 흔한 이유는 용어를 같은 말로 쓰지만 서로 다른 기대를 품고 있다는 점이다. 기획은 사용자 시나리오를 말하고, 개발은 구현 제약을 말하며, QA는 재현 가능한 기준을 요구한다. 이때 중간 정의가 빠지면 같은 회의에서 합의한 내용이 실제 작업 단계에서 다른 결과물로 나타난다.`,
       "",
       "오해를 줄이려면 먼저 \"이 기능이 해결해야 할 사용자 문제\"를 한 문장으로 합의하고, 그다음 기술적 방법을 결정해야 한다. 즉, 해결 대상이 먼저고 컴포넌트나 UI 형태는 나중이다. 이 순서를 지키면 구현 방식이 달라도 품질 기준은 흔들리지 않다.",
       "",
       "## 배경과 맥락",
       "",
-      `${keyword}의 중요성은 단발성 개선이 아니라 운영 누적 효과에서 드러난다. 처음에는 작은 편의 기능처럼 보이지만, 페이지 수와 사용자 유형이 늘어날수록 동일한 문제를 반복적으로 처리해야 하기 때문이다. 결국 실무에서는 \"한 번의 구현\"보다 \"지속적으로 같은 품질을 재현하는 체계\"를 갖추는 쪽으로 시선을 옮겨야 한다.`,
+      `${topic}의 중요성은 단발성 개선이 아니라 운영 누적 효과에서 드러난다. 처음에는 작은 편의 기능처럼 보이지만, 페이지 수와 사용자 유형이 늘어날수록 동일한 문제를 반복적으로 처리해야 하기 때문이다. 결국 실무에서는 \"한 번의 구현\"보다 \"지속적으로 같은 품질을 재현하는 체계\"를 갖추는 쪽으로 시선을 옮겨야 한다.`,
       "",
       "또한 서비스가 다양한 디바이스와 보조기기를 동시에 고려해야 하는 단계에 들어가면, 기능 존재 여부보다 예측 가능한 동작이 더 중요해진다. 사용자 관점에서는 화면이 조금 달라도 핵심 동작이 일관되게 유지되어야 하므로, 정책 문서와 컴포넌트 규칙을 함께 관리하는 접근이 필요하다.",
       "",
       "## 표준과 근거를 읽는 방법",
       "",
-      `${keyword}를 표준 기반으로 설명할 때는 문서 이름만 인용하는 수준에서 멈추면 안 된다. 어떤 요구사항을 어떤 제품 맥락에 적용했는지, 그 결정이 왜 현재 버전에서도 유효한지까지 적어야 검토가 가능하다. 공개 글과 개인 노트에는 최소한 기준 문서명, 확인 날짜, 적용 범위를 함께 남겨 두는 것이 좋다.`,
+      `${topic}를 표준 기반으로 설명할 때는 문서 이름만 인용하는 수준에서 멈추면 안 된다. 어떤 요구사항을 어떤 제품 맥락에 적용했는지, 그 결정이 왜 현재 버전에서도 유효한지까지 적어야 검토가 가능하다. 공개 글과 개인 노트에는 최소한 기준 문서명, 확인 날짜, 적용 범위를 함께 남겨 두는 것이 좋다.`,
       "",
       "여기에 더해 표준 해석과 실제 제품 제약이 부딪히는 지점을 분리해 적어두면 추후 의사결정 비용이 크게 줄어든다. 예외를 숨기지 않고 기록할수록 회귀 이슈를 빠르게 복구할 수 있다. 결국 근거 문서는 규정을 보여주기 위한 장식이 아니라, 변화가 생겼을 때 우리가 같은 방향으로 판단하게 만드는 기준선이다.",
       "",
       "## 핵심 개념 정리",
       "",
-      `${keyword}를 다룰 때는 목적, 대상, 성공 기준을 분리해 정의해야 한다. 목적은 사용자 부담을 어떤 방식으로 줄이는지, 대상은 어떤 상황의 사용자가 이 기능으로 이익을 얻는지, 성공 기준은 배포 후 무엇을 확인하면 \"잘 되었다\"고 볼 수 있는지에 대한 합의이다. 이 세 축이 분리되지 않으면 테스트 항목이 구현 세부사항에 매몰된다.`,
+      `${topic}를 다룰 때는 목적, 대상, 성공 기준을 분리해 정의해야 한다. 목적은 사용자 부담을 어떤 방식으로 줄이는지, 대상은 어떤 상황의 사용자가 이 기능으로 이익을 얻는지, 성공 기준은 배포 후 무엇을 확인하면 \"잘 되었다\"고 볼 수 있는지에 대한 합의이다. 이 세 축이 분리되지 않으면 테스트 항목이 구현 세부사항에 매몰된다.`,
       "",
       "실무 문서에서는 개념 설명을 길게 쓰기보다, 개념이 설계와 검수에 어떻게 연결되는지를 함께 제시하는 편이 좋다. 예를 들어 \"인지 가능성\"을 말한다면 대비·크기·표현 위치 같은 관측 가능한 요소로 풀어야 한다. 추상 개념을 관측 항목으로 내려놓는 순간, 커뮤니케이션 품질이 올라간다.",
       "",
       "## 실무 적용 단계",
       "",
-      `1. 진단: 현재 사용자 흐름에서 ${keyword}가 실제로 막히는 구간을 수집하고 우선순위를 정한다.`,
+      `1. 진단: 현재 사용자 흐름에서 ${topic}가 실제로 막히는 구간을 수집하고 우선순위를 정한다.`,
       "2. 설계: 기준 문구, UI 노출 방식, 상태 전환 규칙을 문서화해 구현 범위를 고정한다.",
       "3. 구현: 최소 기능부터 적용하되 공통 컴포넌트에 녹여 재사용성을 확보한다.",
       "4. 검증: 키보드, 화면리더, 확대 환경 등 주요 시나리오를 동일 절차로 재현한다.",
@@ -160,7 +202,7 @@ function fallbackPayload(keyword) {
       "",
       "## 적용 전략",
       "",
-      `${keyword}를 지속적으로 활용하려면 \"개인 역량\"보다 \"공통 계약\"이 먼저 필요하다. PR 템플릿, 리뷰 체크리스트, 릴리스 검증 항목에 동일한 기준 문구를 넣어두면, 담당자가 달라져도 결과물 편차를 줄일 수 있다. 문서와 코드가 따로 놀지 않도록 컴포넌트 레벨 규칙과 운영 문서를 같이 갱신하는 습관을 붙이는 것이 중요하다.`,
+      `${topic}를 지속적으로 활용하려면 \"개인 역량\"보다 \"공통 계약\"이 먼저 필요하다. PR 템플릿, 리뷰 체크리스트, 릴리스 검증 항목에 동일한 기준 문구를 넣어두면, 담당자가 달라져도 결과물 편차를 줄일 수 있다. 문서와 코드가 따로 놀지 않도록 컴포넌트 레벨 규칙과 운영 문서를 같이 갱신하는 습관을 붙이는 것이 중요하다.`,
       "",
       "조직 규모가 커질수록 예외 관리는 피할 수 없다. 이때 예외를 비공식 대화로 처리하면 다음 주기에 같은 논쟁이 반복된다. 예외 사유와 종료 조건을 기록하고, 일정 주기로 폐기 여부를 확인하는 체계를 두면 규칙이 불필요하게 비대해지는 것을 막을 수 있다.",
       "",
@@ -174,19 +216,18 @@ function fallbackPayload(keyword) {
       "",
       "## 결론",
       "",
-      `${keyword}의 본질은 기능을 더하는 일이 아니라, 사용자가 목표에 도달하는 데 드는 조작 비용과 불확실성을 줄이는 일이다. 그래서 좋은 문서는 기술 스펙을 길게 설명하는 대신, 우리가 같은 기준으로 판단하고 재현할 수 있는 구조를 제공한다. 기준을 명확히 정의하고 검수 루틴까지 운영 체계에 연결하면, 서비스가 커져도 품질을 예측 가능한 수준으로 유지할 수 있다.`
+      `${topic}의 본질은 기능을 더하는 일이 아니라, 사용자가 목표에 도달하는 데 드는 조작 비용과 불확실성을 줄이는 일이다. 그래서 좋은 문서는 기술 스펙을 길게 설명하는 대신, 우리가 같은 기준으로 판단하고 재현할 수 있는 구조를 제공한다. 기준을 명확히 정의하고 검수 루틴까지 운영 체계에 연결하면, 서비스가 커져도 품질을 예측 가능한 수준으로 유지할 수 있다.`
     ].join("\n")
   };
 }
 
-async function generateWithOpenAI(keyword) {
+async function generateWithOpenAI(keyword, topic) {
   if (!process.env.OPENAI_API_KEY) {
     return null;
   }
 
-  // default to a Codex code-generating model when none is specified
-  // user can still override via OPENAI_MODEL environment variable
-  const model = process.env.OPENAI_MODEL || "code-davinci-002";
+  // Default to a chat-capable model; can be overridden by OPENAI_MODEL.
+  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -205,7 +246,7 @@ async function generateWithOpenAI(keyword) {
         },
         {
           role: "user",
-          content: `${keyword} 키워드로 블로그 초안을 작성해줘. 오해하기 쉬운 지점을 먼저 정리하고, 표준 근거와 잘못된 사례를 포함해 실무형 가이드로 작성해줘.`
+          content: `요청 원문: ${keyword}\n핵심 주제: ${topic}\n\n핵심 주제를 중심으로 블로그 초안을 작성해줘. 오해하기 쉬운 지점을 먼저 정리하고, 표준 근거와 잘못된 사례를 포함해 실무형 가이드로 작성해줘.`
         }
       ]
     })
@@ -272,17 +313,18 @@ if (!keyword) {
 const featured = parseBoolean(getArg("--featured"), false);
 const draft = parseBoolean(getArg("--draft"), true);
 const author = getArg("--author", "관리자").trim() || "관리자";
+const topic = normalizeTopicKeyword(keyword);
 
 const seoul = toSeoulParts();
 const datePrefix = `${seoul.year}-${seoul.month}-${seoul.day}`;
 const pubDatetime = `${datePrefix}T${seoul.hour}:${seoul.minute}:${seoul.second}+09:00`;
-const slugBase = keywordSlugToken(keyword);
+const slugBase = keywordSlugToken(topic);
 
-let payload = fallbackPayload(keyword);
+let payload = fallbackPayload(topic);
 let source = "fallback-template";
 
 try {
-  const openaiPayload = await generateWithOpenAI(keyword);
+  const openaiPayload = await generateWithOpenAI(keyword, topic);
   if (openaiPayload) {
     payload = openaiPayload;
     source = "openai";
@@ -291,10 +333,10 @@ try {
   console.warn(`Warning: ${error.message}`);
 }
 
-const tags = cleanupTags(payload.tags, keyword);
-const title = payload.title || `${keyword} 인사이트`; 
-const description = payload.description || `${keyword} 관련 인사이트 요약`;
-const body = payload.body || fallbackPayload(keyword).body;
+const tags = cleanupTags(payload.tags, topic);
+const title = payload.title || `${topic} 인사이트`;
+const description = payload.description || `${topic} 관련 인사이트 요약`;
+const body = payload.body || fallbackPayload(topic).body;
 
 await mkdir(path.join(process.cwd(), "src", "content", "posts"), { recursive: true });
 
