@@ -16,6 +16,11 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props as { post: CollectionEntry<"posts"> };
 const { Content } = await post.render();
+const rawTitle = post.data.title.trim();
+const delimiterIndex = rawTitle.search(/[:：]/);
+const hasSubtitle = delimiterIndex > -1;
+const titleMain = hasSubtitle ? rawTitle.slice(0, delimiterIndex).trim() : rawTitle;
+const titleSub = hasSubtitle ? rawTitle.slice(delimiterIndex + 1).trim() : "";
 ---
 
 <BaseLayout title={`${post.data.title} | 디지털 접근성 아카이브`} description={post.data.description}>
@@ -31,7 +36,10 @@ const { Content } = await post.render();
             })}
           </time>
         </div>
-        <h1>{post.data.title}</h1>
+        <h1 class="post-detail-title" aria-label={rawTitle}>
+          <span class="post-detail-title-main">{titleMain}</span>
+          {titleSub && <span class="post-detail-title-sub">{titleSub}</span>}
+        </h1>
         <hr />
       </div>
       <Content />

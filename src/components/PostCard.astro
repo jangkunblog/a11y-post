@@ -6,11 +6,19 @@ interface Props {
 }
 
 const { post } = Astro.props;
+const rawTitle = post.data.title.trim();
+const delimiterIndex = rawTitle.search(/[:：]/);
+const hasSubtitle = delimiterIndex > -1;
+const titleMain = hasSubtitle ? rawTitle.slice(0, delimiterIndex).trim() : rawTitle;
+const titleSub = hasSubtitle ? rawTitle.slice(delimiterIndex + 1).trim() : "";
 ---
 
 <li class="post-list-item">
   <h2 class="post-title">
-    <a href={`/posts/${post.slug}/`}>{post.data.title}</a>
+    <a href={`/posts/${post.slug}/`} aria-label={rawTitle}>
+      <span class="post-title-main">{titleMain}</span>
+      {titleSub && <span class="post-title-sub">{titleSub}</span>}
+    </a>
   </h2>
   <p class="post-date">
     <time datetime={post.data.pubDatetime.toISOString()}>
