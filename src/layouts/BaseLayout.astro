@@ -82,6 +82,427 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
         window.addEventListener("load", updateProgress);
         updateProgress();
       })();
+
+      (() => {
+        const citationLinks = Array.from(document.querySelectorAll("a.cite-ref"));
+        if (!citationLinks.length) return;
+
+        const normalizeText = (value) => (value || "").replace(/\s+/g, " ").trim();
+        const cleanSourceLabel = (value) => normalizeText((value || "").replace(/^\[\d+\]\s*/, ""));
+        const parseCitationNumber = (value) => {
+          const match = (value || "").match(/\[(\d+)\]|(\d+)/);
+          if (!match) return null;
+          return Number(match[1] || match[2]);
+        };
+
+        const escapeHtml = (value) =>
+          String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
+        const highlightExcerptHtml = (excerpt, keyword) => {
+          const safeExcerpt = normalizeText(excerpt);
+          const safeKeyword = normalizeText(keyword);
+          if (!safeExcerpt) return "";
+          if (!safeKeyword) return escapeHtml(safeExcerpt);
+
+          const lowerExcerpt = safeExcerpt.toLowerCase();
+          const lowerKeyword = safeKeyword.toLowerCase();
+          const startIndex = lowerExcerpt.indexOf(lowerKeyword);
+          if (startIndex < 0) return escapeHtml(safeExcerpt);
+
+          const endIndex = startIndex + safeKeyword.length;
+          const before = safeExcerpt.slice(0, startIndex);
+          const match = safeExcerpt.slice(startIndex, endIndex);
+          const after = safeExcerpt.slice(endIndex);
+          return `${escapeHtml(before)}<mark class="cite-quote-mark">${escapeHtml(match)}</mark>${escapeHtml(after)}`;
+        };
+
+        const sourceExcerptRegistry = {
+          "https://blog.fe4all.dev/posts/claude-code-memory/": {
+            origin: "페이지 설명(meta description)",
+            excerpt:
+              "Claude Code의 Memory 시스템을 활용하여 세션 간 컨텍스트를 유지하는 방법을 알아봅니다. CLAUDE.md, 자동 메모리, 모듈식 규칙까지 계층별 설정과 실전 활용법을 다룹니다.",
+            highlight: "세션 간 컨텍스트를 유지"
+          },
+          "https://datatracker.ietf.org/doc/bcp47/": {
+            origin: "IETF Datatracker 본문",
+            excerpt: "BCP 47 consists of: RFC 4647 : Matching of Language Tags; RFC 5646 : Tags for Identifying Languages.",
+            highlight: "RFC 5646 : Tags for Identifying Languages"
+          },
+          "https://docs.anthropic.com/": {
+            origin: "페이지 설명(meta description)",
+            excerpt: "Claude API Documentation.",
+            highlight: "API Documentation"
+          },
+          "https://github.com/w3c/wcag3/issues": {
+            origin: "페이지 설명(meta description)",
+            excerpt: "WCAG 3. Contribute to w3c/wcag3 development by creating an account on GitHub.",
+            highlight: "Contribute to w3c/wcag3 development"
+          },
+          "https://html.spec.whatwg.org/multipage/dom.html#the-lang-and-xml:lang-attributes": {
+            origin: "HTML Living Standard §3.2.6.2",
+            excerpt: "The lang attribute in no namespace may be used on any HTML element.",
+            highlight: "may be used on any HTML element"
+          },
+          "https://html.spec.whatwg.org/multipage/semantics.html#the-html-element": {
+            origin: "HTML Living Standard §4.1.1",
+            excerpt:
+              "Authors are encouraged to specify a lang attribute on the root html element, giving the document's language.",
+            highlight: "root html element"
+          },
+          "https://jangkunblog.com/wp/skip-navigation-is-not-a-quick-link/": {
+            origin: "본문 문단",
+            excerpt:
+              "여기서 '링크'라는 것은 매 페이지마다 반복적으로 제공되는 링크를 말하며, 건너뛰기 링크는 이를 건너뛰어 바로 본문으로 포커스를 이동할 수 있게 해주는 역할을 하게 됩니다.",
+            highlight: "바로 본문으로 포커스를 이동"
+          },
+          "https://oecd.ai/en/ai-principles": {
+            origin: "본문 문단",
+            excerpt:
+              "The OECD Recommendation on AI is the first intergovernmental standard on AI. Today, there are 47 adherents to the Principles.",
+            highlight: "first intergovernmental standard on AI"
+          },
+          "https://w3c.github.io/i18n-drafts/articles/language-tags/index.en.html": {
+            origin: "본문 문단",
+            excerpt:
+              "You used to find subtags by consulting the lists of codes in various ISO standards, but now you can find all subtags in the IANA Language Subtag Registry.",
+            highlight: "all subtags in the IANA Language Subtag Registry"
+          },
+          "https://webaim.org/techniques/skipnav/": {
+            origin: "본문 문단",
+            excerpt:
+              "The easiest method of creating a skip navigation link is to put it at or near the top of the page in regular text.",
+            highlight: "at or near the top of the page"
+          },
+          "https://www.iana.org/assignments/language-subtags-tags-extensions/language-subtags-tags-extensions.xhtml": {
+            origin: "본문 문단",
+            excerpt: "This registry is obsolete and has been replaced by the [Language Subtag Registry].",
+            highlight: "replaced by the [Language Subtag Registry]"
+          },
+          "https://www.nist.gov/itl/ai-risk-management-framework": {
+            origin: "Overview of the AI RMF",
+            excerpt:
+              "In collaboration with the private and public sectors, NIST has developed a framework to better manage risks to individuals, organizations, and society associated with artificial intelligence (AI).",
+            highlight: "manage risks to individuals, organizations, and society"
+          },
+          "https://www.rfc-editor.org/rfc/rfc5646": {
+            origin: "RFC 5646 Abstract",
+            excerpt:
+              "This document describes the structure, content, construction, and semantics of language tags for use in cases where it is desirable to indicate the language used in an information object.",
+            highlight: "structure, content, construction, and semantics of language tags"
+          },
+          "https://www.w3.org/International/questions/qa-choosing-language-tags.en.html": {
+            origin: "본문 문단",
+            excerpt:
+              "Always bear in mind that the golden rule is to keep your language tag as short as possible.",
+            highlight: "keep your language tag as short as possible"
+          },
+          "https://www.w3.org/International/techniques/authoring-html": {
+            origin: "Authoring HTML Best Practices",
+            excerpt: "Do NOT use the meta element with the content attribute set to Content-Language.",
+            highlight: "Do NOT use the meta element"
+          },
+          "https://www.w3.org/TR/WCAG22/#conformance": {
+            origin: "WCAG 2.2 §5.2.3 Complete processes",
+            excerpt:
+              "When a web page is one of a series of web pages presenting a process (i.e., a sequence of steps that need to be completed in order to accomplish an activity), all web pages in the process conform at the specified level or better.",
+            highlight: "all web pages in the process conform at the specified level or better"
+          },
+          "https://www.w3.org/TR/wcag/": {
+            origin: "WCAG 2.2 Introduction",
+            excerpt:
+              "Web Content Accessibility Guidelines (WCAG) 2.2 covers a wide range of recommendations for making web content more accessible.",
+            highlight: "wide range of recommendations"
+          },
+          "https://www.w3.org/WAI/WCAG22/Techniques/general/G1": {
+            origin: "Technique G1 Description",
+            excerpt:
+              "The objective of this technique is to provide a mechanism to bypass blocks of material that are repeated on multiple web pages by skipping directly to the main content of the web page.",
+            highlight: "bypass blocks of material that are repeated"
+          },
+          "https://www.w3.org/WAI/WCAG22/Techniques/html/H57": {
+            origin: "Technique H57 Description",
+            excerpt:
+              "The objective of this technique is to identify the default language of a document by providing the lang attribute on the html element.",
+            highlight: "identify the default language of a document"
+          },
+          "https://www.w3.org/WAI/WCAG22/Techniques/html/H58": {
+            origin: "Technique H58 Description",
+            excerpt:
+              "The objective of this technique is to clearly identify any changes in language on a page by using the lang attribute.",
+            highlight: "identify any changes in language on a page"
+          },
+          "https://www.w3.org/WAI/WCAG22/Understanding/bypass-blocks.html": {
+            origin: "SC 2.4.1 문장",
+            excerpt: "A mechanism is available to bypass blocks of content that are repeated on multiple web pages.",
+            highlight: "bypass blocks of content that are repeated"
+          },
+          "https://www.w3.org/WAI/WCAG22/Understanding/conformance": {
+            origin: "Understanding Conformance",
+            excerpt:
+              "It is not recommended that Level AAA conformance be required as a general policy for entire sites because it is not possible to satisfy all Level AAA success criteria for some content.",
+            highlight: "not recommended that Level AAA conformance be required"
+          },
+          "https://www.w3.org/WAI/WCAG22/Understanding/language-of-page.html": {
+            origin: "SC 3.1.1 Intent",
+            excerpt:
+              "The intent of this success criterion is to ensure that content developers provide information in the web page that user agents need to present text and other linguistic content correctly.",
+            highlight: "present text and other linguistic content correctly"
+          },
+          "https://www.w3.org/WAI/WCAG22/Understanding/language-of-parts.html": {
+            origin: "SC 3.1.2 Intent",
+            excerpt:
+              "The intent of this success criterion is to ensure that user agents can correctly present phrases, passages, and in some cases words written in multiple languages.",
+            highlight: "correctly present phrases, passages"
+          },
+          "https://www.w3.org/WAI/news/2026-03-03/wcag3/": {
+            origin: "페이지 설명(meta description)",
+            excerpt:
+              "W3C Accessibility Guidelines (WCAG) 3.0 Working Draft is updated. The starting place for background, timeline, and up-to-date information is the WCAG 3 Introduction.",
+            highlight: "Working Draft is updated"
+          },
+          "https://www.w3.org/WAI/standards-guidelines/": {
+            origin: "페이지 설명(structured data)",
+            excerpt:
+              "Accessibility resources free online from the international standards organization: W3C Web Accessibility Initiative (WAI).",
+            highlight: "Accessibility resources free online"
+          },
+          "https://www.w3.org/WAI/standards-guidelines/wcag/wcag3-intro/": {
+            origin: "WCAG 3 Introduction",
+            excerpt:
+              "W3C Accessibility Guidelines (WCAG) 3 is currently an incomplete draft. WCAG 3 is intended to develop into a W3C Standard in a few years.",
+            highlight: "currently an incomplete draft"
+          },
+          "https://www.w3.org/standards/history/WAI-WEBCONTENT/": {
+            origin: "Publication History 표",
+            excerpt:
+              "publication history Date Status 5 May 1999 Retired 24 March 1999 Proposed Recommendation 26 February 1999 Working Draft.",
+            highlight: "5 May 1999 Retired"
+          },
+          "https://www.w3.org/standards/history/WCAG20/": {
+            origin: "Publication History 표",
+            excerpt:
+              "publication history Date Status 11 December 2008 Recommendation 3 November 2008 Proposed Recommendation 30 April 2008 Candidate Recommendation Snapshot.",
+            highlight: "11 December 2008 Recommendation"
+          },
+          "https://www.w3.org/standards/history/WCAG21/": {
+            origin: "Publication History 표",
+            excerpt:
+              "publication history Date Status 6 May 2025 Recommendation 12 December 2024 Recommendation 21 September 2023 Recommendation 5 June 2018 Recommendation.",
+            highlight: "6 May 2025 Recommendation"
+          },
+          "https://www.w3.org/standards/history/WCAG22/": {
+            origin: "Publication History 표",
+            excerpt:
+              "publication history Date Status 12 December 2024 Recommendation 5 October 2023 Recommendation 20 July 2023 Proposed Recommendation.",
+            highlight: "12 December 2024 Recommendation"
+          },
+          "https://www.w3.org/standards/history/wcag-3.0/": {
+            origin: "Publication History 표",
+            excerpt:
+              "publication history Date Status 3 March 2026 Working Draft 4 September 2025 Working Draft 12 December 2024 Working Draft.",
+            highlight: "3 March 2026 Working Draft"
+          }
+        };
+
+        const referencesHeading =
+          Array.from(document.querySelectorAll("h2, h3")).find(
+            (heading) => normalizeText(heading.textContent) === "참고 자료"
+          ) || document.getElementById("참고-자료");
+
+        if (referencesHeading && !referencesHeading.id) {
+          referencesHeading.id = "참고-자료";
+        }
+
+        let referencesList = null;
+        if (referencesHeading) {
+          let cursor = referencesHeading.nextElementSibling;
+          while (cursor && cursor.tagName !== "OL" && cursor.tagName !== "UL") {
+            cursor = cursor.nextElementSibling;
+          }
+          referencesList = cursor;
+        }
+
+        const referenceItems = referencesList
+          ? Array.from(referencesList.children).filter((node) => node.tagName === "LI")
+          : [];
+
+        referenceItems.forEach((item, index) => {
+          if (!item.id) {
+            item.id = `cite-source-${index + 1}`;
+          }
+        });
+
+        const citeWrappers = new Set();
+
+        const closeAll = () => {
+          citeWrappers.forEach((wrapper) => {
+            wrapper.classList.remove("is-open");
+            const trigger = wrapper.querySelector(".cite-ref");
+            const tooltip = wrapper.querySelector(".cite-tooltip");
+            if (trigger) trigger.setAttribute("aria-expanded", "false");
+            if (tooltip) tooltip.setAttribute("aria-hidden", "true");
+          });
+        };
+
+        citationLinks.forEach((link) => {
+          if (link.dataset.citeReady === "true") return;
+          link.dataset.citeReady = "true";
+
+          const wrapper = link.closest("sup") || link.parentElement;
+          if (!wrapper) return;
+          wrapper.classList.add("cite-wrap");
+          citeWrappers.add(wrapper);
+
+          const sourceUrl = link.getAttribute("href") || "";
+          const citationNumber = parseCitationNumber(link.textContent || link.dataset.cite || link.title);
+          const matchedReference = citationNumber ? referenceItems[citationNumber - 1] : null;
+          const targetId = matchedReference?.id || referencesHeading?.id || "참고-자료";
+          const sourceName =
+            cleanSourceLabel(link.dataset.cite || link.getAttribute("title")) ||
+            normalizeText(matchedReference?.textContent) ||
+            "원문 자료";
+          const normalizedSourceUrl = sourceUrl.replace(/#.*$/, "");
+          const registryMatch =
+            sourceExcerptRegistry[sourceUrl] || sourceExcerptRegistry[normalizedSourceUrl] || null;
+          const sourceExcerpt =
+            normalizeText(link.getAttribute("data-cite-source-excerpt")) || normalizeText(registryMatch?.excerpt);
+          const sourceExcerptOrigin =
+            normalizeText(link.getAttribute("data-cite-source-origin")) ||
+            normalizeText(registryMatch?.origin);
+          const sourceHighlight =
+            normalizeText(link.getAttribute("data-cite-highlight")) ||
+            normalizeText(registryMatch?.highlight);
+          const excerptLabelText = sourceExcerpt
+            ? sourceExcerptOrigin
+              ? `원문 발췌 (${sourceExcerptOrigin})`
+              : "원문 발췌"
+            : "원문 발췌 미등록";
+          const excerptText = sourceExcerpt || "출처 원문 발췌가 등록되지 않았습니다. 해당 인용을 검수해 주세요.";
+
+          link.setAttribute("href", `#${targetId}`);
+          link.removeAttribute("target");
+          link.setAttribute("aria-haspopup", "dialog");
+          link.setAttribute("aria-expanded", "false");
+          link.setAttribute("aria-label", `출처 ${citationNumber || ""} 상세 보기`);
+          link.removeAttribute("title");
+
+          if (!wrapper.querySelector(".cite-tooltip")) {
+            const tooltip = document.createElement("span");
+            tooltip.className = "cite-tooltip";
+            tooltip.setAttribute("role", "tooltip");
+            tooltip.setAttribute("aria-hidden", "true");
+
+            const header = document.createElement("span");
+            header.className = "cite-tooltip-head";
+
+            const jumpLink = document.createElement("a");
+            jumpLink.className = "cite-jump";
+            jumpLink.href = `#${targetId}`;
+            jumpLink.textContent = `#${citationNumber || "?"}`;
+            jumpLink.setAttribute("title", "화면 하단 참고 자료로 이동");
+
+            const sourceTitle = document.createElement("a");
+            sourceTitle.className = "cite-source-link";
+            sourceTitle.href = sourceUrl;
+            sourceTitle.target = "_blank";
+            sourceTitle.rel = "noopener noreferrer";
+            sourceTitle.setAttribute("title", "원문을 새 창에서 열기");
+            sourceTitle.textContent = sourceName;
+
+            const externalLink = document.createElement("a");
+            externalLink.className = "cite-external";
+            externalLink.href = sourceUrl;
+            externalLink.target = "_blank";
+            externalLink.rel = "noopener noreferrer";
+            externalLink.textContent = "출처 보기";
+            externalLink.setAttribute("title", "원문을 새 창에서 열기");
+
+            const excerptLabel = document.createElement("span");
+            excerptLabel.className = "cite-quote-label";
+            excerptLabel.textContent = excerptLabelText;
+
+            const excerpt = document.createElement("span");
+            excerpt.className = "cite-quote";
+            excerpt.innerHTML = highlightExcerptHtml(excerptText, sourceHighlight);
+
+            header.appendChild(jumpLink);
+            header.appendChild(sourceTitle);
+            header.appendChild(externalLink);
+            tooltip.appendChild(header);
+            tooltip.appendChild(excerptLabel);
+            tooltip.appendChild(excerpt);
+            wrapper.appendChild(tooltip);
+
+            jumpLink.addEventListener("click", () => {
+              closeAll();
+            });
+
+            externalLink.addEventListener("click", (event) => {
+              event.stopPropagation();
+              closeAll();
+            });
+
+            sourceTitle.addEventListener("click", (event) => {
+              event.stopPropagation();
+              closeAll();
+            });
+          }
+
+          link.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const isOpen = wrapper.classList.contains("is-open");
+            closeAll();
+            if (!isOpen) {
+              wrapper.classList.add("is-open");
+              link.setAttribute("aria-expanded", "true");
+              const tooltip = wrapper.querySelector(".cite-tooltip");
+              if (tooltip) tooltip.setAttribute("aria-hidden", "false");
+            }
+          });
+
+          link.addEventListener("keydown", (event) => {
+            if (event.key === " ") {
+              event.preventDefault();
+              link.click();
+            }
+            if (event.key === "Escape") {
+              closeAll();
+            }
+          });
+
+          wrapper.addEventListener("mouseenter", () => {
+            const tooltip = wrapper.querySelector(".cite-tooltip");
+            if (tooltip) tooltip.setAttribute("aria-hidden", "false");
+          });
+
+          wrapper.addEventListener("mouseleave", () => {
+            if (wrapper.classList.contains("is-open")) return;
+            const tooltip = wrapper.querySelector(".cite-tooltip");
+            if (tooltip) tooltip.setAttribute("aria-hidden", "true");
+          });
+        });
+
+        document.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof Node)) return;
+          for (const wrapper of citeWrappers) {
+            if (wrapper.contains(target)) return;
+          }
+          closeAll();
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeAll();
+          }
+        });
+      })();
     </script>
   </body>
 </html>

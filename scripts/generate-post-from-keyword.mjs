@@ -50,7 +50,21 @@ function toSeoulParts(date = new Date()) {
 }
 
 function slugifyKeyword(keyword) {
-  const normalized = keyword
+  const raw = String(keyword || "");
+
+  // Lightweight transliteration for common Korean accessibility terms.
+  const transliterated = raw
+    .replace(/인공지능/g, "ai")
+    .replace(/디지털\s*접근성|디지털접근성/g, "digital accessibility")
+    .replace(/웹\s*접근성|웹접근성/g, "web accessibility")
+    .replace(/접근성/g, "accessibility")
+    .replace(/디지털/g, "digital")
+    .replace(/미래/g, "future")
+    .replace(/관계/g, "relationship")
+    .replace(/가이드/g, "guide")
+    .replace(/체크리스트/g, "checklist");
+
+  const normalized = transliterated
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -77,12 +91,18 @@ function keywordHash(keyword) {
 }
 
 function keywordSlugToken(keyword) {
-  const normalized = slugifyKeyword(keyword);
+  const source = String(keyword || "");
+  const normalized = slugifyKeyword(source);
   if (normalized !== "keyword-post") {
+    const hasNonAscii = /[^\x00-\x7F]/.test(source);
+    const tokenCount = normalized.split("-").filter(Boolean).length;
+    if (hasNonAscii && (tokenCount < 2 || normalized.length < 8)) {
+      return `${normalized}-${keywordHash(source)}`;
+    }
     return normalized;
   }
 
-  return `keyword-${keywordHash(keyword)}`;
+  return `keyword-${keywordHash(source)}`;
 }
 
 function normalizeTopicKeyword(keyword) {
@@ -276,6 +296,12 @@ async function loadPostCorpusSummary() {
 
 function fallbackPayload(keyword) {
   const topic = normalizeTopicKeyword(keyword);
+  const cite1 =
+    '<sup><a class="cite-ref" href="https://www.w3.org/TR/wcag/" title="[1] WCAG 2.2 (W3C Recommendation)" data-cite="[1] WCAG 2.2 (W3C Recommendation)" target="_blank" rel="noopener noreferrer">[1]</a></sup>';
+  const cite2 =
+    '<sup><a class="cite-ref" href="https://www.w3.org/WAI/standards-guidelines/" title="[2] W3C WAI Standards and Guidelines" data-cite="[2] W3C WAI Standards and Guidelines" target="_blank" rel="noopener noreferrer">[2]</a></sup>';
+  const cite3 =
+    '<sup><a class="cite-ref" href="https://www.w3.org/WAI/test-evaluate/" title="[3] W3C WAI Evaluating Web Accessibility" data-cite="[3] W3C WAI Evaluating Web Accessibility" target="_blank" rel="noopener noreferrer">[3]</a></sup>';
 
   return {
     title: fallbackTitle(topic),
@@ -284,7 +310,7 @@ function fallbackPayload(keyword) {
     body: [
       `## ${topic}를 지금 다시 정의해야 하는 이유`,
       "",
-      `${topic}는 보통 기능 하나를 소개하는 주제로 소비되지만, 실무에서는 사용자 경험과 운영 구조를 동시에 흔드는 변수로 작동한다. 그래서 처음부터 \"무엇을 만들 것인가\"보다 \"어떤 비용을 줄일 것인가\"를 먼저 정의해야 한다. 특히 서비스가 커질수록 사소해 보이는 설계 결정이 누적되어 접근성, 유지보수성, QA 비용까지 연결되기 때문에, 주제의 범위를 좁게 잡으면 실무 판단이 흔들리기 쉽다.`,
+      `${topic}는 보통 기능 하나를 소개하는 주제로 소비되지만, 실무에서는 사용자 경험과 운영 구조를 동시에 흔드는 변수로 작동한다.${cite1}${cite2} 그래서 처음부터 \"무엇을 만들 것인가\"보다 \"어떤 비용을 줄일 것인가\"를 먼저 정의해야 한다. 특히 서비스가 커질수록 사소해 보이는 설계 결정이 누적되어 접근성, 유지보수성, QA 비용까지 연결되기 때문에, 주제의 범위를 좁게 잡으면 실무 판단이 흔들리기 쉽다.`,
       "",
       `이 가이드는 ${topic}를 단순 구현 팁이 아니라 우리가 재사용할 수 있는 정리 문서로 설계했다. 따라서 개념 정의와 함께 표준 근거, 적용 단계, 실패 패턴, 검수 루틴을 같이 제시한다. 바로 업무에 적용할 수 있도록 항목별 체크 기준을 명확히 적고, 실제 검토 상황에서 자주 발생하는 오해를 먼저 정리하는 흐름을 따른다.`,
       "",
@@ -298,11 +324,11 @@ function fallbackPayload(keyword) {
       "",
       `${topic}의 중요성은 단발성 개선이 아니라 운영 누적 효과에서 드러난다. 처음에는 작은 편의 기능처럼 보이지만, 페이지 수와 사용자 유형이 늘어날수록 동일한 문제를 반복적으로 처리해야 하기 때문이다. 결국 실무에서는 \"한 번의 구현\"보다 \"지속적으로 같은 품질을 재현하는 체계\"를 갖추는 쪽으로 시선을 옮겨야 한다.`,
       "",
-      "또한 서비스가 다양한 디바이스와 보조기기를 동시에 고려해야 하는 단계에 들어가면, 기능 존재 여부보다 예측 가능한 동작이 더 중요해진다. 사용자 관점에서는 화면이 조금 달라도 핵심 동작이 일관되게 유지되어야 하므로, 정책 문서와 컴포넌트 규칙을 함께 관리하는 접근이 필요하다.",
+      `또한 서비스가 다양한 디바이스와 보조기기를 동시에 고려해야 하는 단계에 들어가면, 기능 존재 여부보다 예측 가능한 동작이 더 중요해진다.${cite1} 사용자 관점에서는 화면이 조금 달라도 핵심 동작이 일관되게 유지되어야 하므로, 정책 문서와 컴포넌트 규칙을 함께 관리하는 접근이 필요하다.`,
       "",
       "## 표준과 근거를 읽는 방법",
       "",
-      `${topic}를 표준 기반으로 설명할 때는 문서 이름만 인용하는 수준에서 멈추면 안 된다. 어떤 요구사항을 어떤 제품 맥락에 적용했는지, 그 결정이 왜 현재 버전에서도 유효한지까지 적어야 검토가 가능하다. 공개 글과 개인 노트에는 최소한 기준 문서명, 확인 날짜, 적용 범위를 함께 남겨 두는 것이 좋다.`,
+      `${topic}를 표준 기반으로 설명할 때는 문서 이름만 인용하는 수준에서 멈추면 안 된다. 어떤 요구사항을 어떤 제품 맥락에 적용했는지, 그 결정이 왜 현재 버전에서도 유효한지까지 적어야 검토가 가능하다.${cite1}${cite2} 공개 글과 개인 노트에는 최소한 기준 문서명, 확인 날짜, 적용 범위를 함께 남겨 두는 것이 좋다.`,
       "",
       "여기에 더해 표준 해석과 실제 제품 제약이 부딪히는 지점을 분리해 적어두면 추후 의사결정 비용이 크게 줄어든다. 예외를 숨기지 않고 기록할수록 회귀 이슈를 빠르게 복구할 수 있다. 결국 근거 문서는 규정을 보여주기 위한 장식이 아니라, 변화가 생겼을 때 우리가 같은 방향으로 판단하게 만드는 기준선이다.",
       "",
@@ -334,7 +360,7 @@ function fallbackPayload(keyword) {
       "",
       "## 개발과 검수 방법",
       "",
-      "검수는 \"동작한다\"를 확인하는 과정이 아니라 \"사용자가 같은 방식으로 성공할 수 있다\"를 증명하는 과정이다. 따라서 키보드 탐색, 보조기기 낭독, 화면 확대 등 실제 사용 조건을 반영한 테스트 순서를 고정해야 한다. 테스트 담당자가 바뀌어도 동일한 결론이 나오도록, 실행 방법과 기대 결과를 문서에 함께 남기는 것이 중요하다.",
+      `검수는 \"동작한다\"를 확인하는 과정이 아니라 \"사용자가 같은 방식으로 성공할 수 있다\"를 증명하는 과정이다. 따라서 키보드 탐색, 보조기기 낭독, 화면 확대 등 실제 사용 조건을 반영한 테스트 순서를 고정해야 한다.${cite1}${cite3} 테스트 담당자가 바뀌어도 동일한 결론이 나오도록, 실행 방법과 기대 결과를 문서에 함께 남기는 것이 중요하다.`,
       "",
       "권장 루틴은 기능 단위 수동 점검과 공통 회귀 점검의 이중 구조이다. 기능 점검에서는 해당 변경이 사용 흐름을 깨지 않는지 보고, 회귀 점검에서는 기존 주요 경로가 영향을 받지 않았는지 확인한다. 두 검수를 분리하면 문제 위치를 빠르게 좁힐 수 있고, 수정 범위도 현실적으로 관리할 수 있다.",
       "",
@@ -354,13 +380,22 @@ function fallbackPayload(keyword) {
       "",
       "## 마무리",
       "",
-      `${topic}의 본질은 기능을 더하는 일이 아니라, 사용자가 목표에 도달하는 데 드는 조작 비용과 불확실성을 줄이는 일이다. 그래서 좋은 문서는 기술 스펙을 길게 설명하는 대신, 우리가 같은 기준으로 판단하고 재현할 수 있는 구조를 제공한다. 기준을 명확히 정의하고 검수 루틴까지 운영 체계에 연결하면, 서비스가 커져도 품질을 예측 가능한 수준으로 유지할 수 있다.`
+      `${topic}의 본질은 기능을 더하는 일이 아니라, 사용자가 목표에 도달하는 데 드는 조작 비용과 불확실성을 줄이는 일이다. 그래서 좋은 문서는 기술 스펙을 길게 설명하는 대신, 우리가 같은 기준으로 판단하고 재현할 수 있는 구조를 제공한다. 기준을 명확히 정의하고 검수 루틴까지 운영 체계에 연결하면, 서비스가 커져도 품질을 예측 가능한 수준으로 유지할 수 있다.`,
+      "",
+      "## 참고 자료",
+      "",
+      "1. WCAG 2.2 (W3C Recommendation): https://www.w3.org/TR/wcag/",
+      "2. W3C WAI Standards and Guidelines: https://www.w3.org/WAI/standards-guidelines/",
+      "3. W3C WAI Evaluating Web Accessibility: https://www.w3.org/WAI/test-evaluate/"
     ].join("\n")
   };
 }
 
 async function generateWithOpenAI(keyword, topic, options = {}) {
   if (!process.env.OPENAI_API_KEY) {
+    console.warn(
+      "Warning: OPENAI_API_KEY is not set. Falling back to local template. (Set OPENAI_API_KEY to generate high-quality AI drafts.)"
+    );
     return null;
   }
 
@@ -383,7 +418,7 @@ async function generateWithOpenAI(keyword, topic, options = {}) {
         {
           role: "system",
           content:
-            `당신은 시니어 기술 블로그 편집자다. 한국어로 작성하고 JSON만 반환한다. 필드: title, description, tags(string[]), body(markdown).\n\n반드시 지킬 작성 원칙:\n- 저장소의 기존 글 전체 문체를 일관되게 따른다.\n- 오해 바로잡기형 도입 -> 개념 정의 -> 표준 근거(날짜 포함) -> 올바른 사용법 -> 잘못된 사례 -> 검수 방법 -> 마무리 순서를 따른다.\n- body는 상세 long-form으로 작성하며 최소 H2 9개, H3 12개 이상을 유지하고 단계형 가이드와 체크리스트를 포함한다.\n- 문단은 단문 나열을 피하고 3~6문장 산문형으로 작성하되, 비교/절차/요약/체크포인트는 리스트(불릿/번호)를 사용한다.\n- 표준/스펙 주제는 반드시 요구사항, 동작 원리, 입력 규칙, 유효/무효 사례, 검수 방법을 포함한다.\n- h1/h2/h3 제목에는 숫자 넘버링을 넣지 않는다.\n- 문장은 기본적으로 -다/-이다 체로 작성한다.\n- 특정 조직 내부 문서처럼 쓰지 않고 공개 포스팅 톤으로 작성한다. '우리 팀', '독자' 같은 주어를 남발하지 않는다.\n- 한국 실무에서 어색한 어려운 용어는 쉬운 한국어로 풀고, 필요한 경우 첫 등장에만 영어 원어를 괄호로 병기한다.\n- 과장된 홍보 문구 없이 근거 중심으로 작성한다.\n\n프로젝트의 AGENTS 작성 규칙:\n${writingRules || "- (rules unavailable)"}\n`
+            `당신은 시니어 기술 블로그 편집자다. 한국어로 작성하고 JSON만 반환한다. 필드: title, description, tags(string[]), body(markdown).\n\n반드시 지킬 작성 원칙:\n- 저장소의 기존 글 전체 문체를 일관되게 따른다.\n- 오해 바로잡기형 도입 -> 개념 정의 -> 표준 근거(날짜 포함) -> 올바른 사용법 -> 잘못된 사례 -> 검수 방법 -> 마무리 순서를 따른다.\n- body는 상세 long-form으로 작성하며 최소 H2 9개, H3 12개 이상을 유지하고 단계형 가이드와 체크리스트를 포함한다.\n- 문단은 단문 나열을 피하고 3~6문장 산문형으로 작성하되, 비교/절차/요약/체크포인트는 리스트(불릿/번호)를 사용한다.\n- 표준/스펙 주제는 반드시 요구사항, 동작 원리, 입력 규칙, 유효/무효 사례, 검수 방법을 포함한다.\n- h1/h2/h3 제목에는 숫자 넘버링을 넣지 않는다.\n- 문장은 기본적으로 -다/-이다 체로 작성한다.\n- 특정 조직 내부 문서처럼 쓰지 않고 공개 포스팅 톤으로 작성한다. '우리 팀', '독자' 같은 주어를 남발하지 않는다.\n- 한국 실무에서 어색한 어려운 용어는 쉬운 한국어로 풀고, 필요한 경우 첫 등장에만 영어 원어를 괄호로 병기한다.\n- 과장된 홍보 문구 없이 근거 중심으로 작성한다.\n- 근거 없는 사실/논리 생성 금지. 확인 가능한 출처가 없으면 단정 문장을 쓰지 않는다.\n- 표준/연혁/수치/정책 주장을 쓸 때는 문장 끝에 [n] 윗첨자 인용을 붙인다.\n- 본문 [n] 번호와 문서 하단 참고 자료 번호를 1:1로 맞춘다.\n\n프로젝트의 AGENTS 작성 규칙:\n${writingRules || "- (rules unavailable)"}\n`
         },
         {
           role: "user",
@@ -452,7 +487,10 @@ if (!keyword) {
 }
 
 const featured = parseBoolean(getArg("--featured"), false);
-const draft = parseBoolean(getArg("--draft"), true);
+const isGitHubActions = parseBoolean(process.env.GITHUB_ACTIONS, false);
+const draftDefault = isGitHubActions;
+const draft = parseBoolean(getArg("--draft"), draftDefault);
+const requireAi = parseBoolean(getArg("--require-ai"), false);
 const author = getArg("--author", "관리자").trim() || "관리자";
 const topic = normalizeTopicKeyword(keyword);
 
@@ -479,6 +517,13 @@ try {
   }
 } catch (error) {
   console.warn(`Warning: ${error.message}`);
+}
+
+if (requireAi && source !== "openai") {
+  console.error(
+    "Error: --require-ai was set, but AI generation was unavailable. Check OPENAI_API_KEY/OPENAI_MODEL and retry."
+  );
+  process.exit(1);
 }
 
 const tags = cleanupTags(payload.tags, topic);

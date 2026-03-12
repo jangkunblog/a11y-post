@@ -17,6 +17,11 @@ npm run post:generate -- --keyword "주제"
 
 생성 파일은 `src/content/posts/`에 저장된다.
 
+- 로컬 실행 기본값: `draft: false` (목록에 바로 노출)
+- GitHub Actions 실행 기본값: `draft: true`
+- AI 생성 강제: `npm run post:generate -- --keyword "주제" --require-ai true`
+  - AI를 사용할 수 없으면 파일을 생성하지 않고 종료한다.
+
 ## 발행 흐름
 
 1. 로컬에서 글 작성/수정
