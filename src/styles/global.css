@@ -63,7 +63,7 @@ body::after {
   z-index: -1;
   pointer-events: none;
   background:
-    url("data:image/svg+xml,%3Csvg width='1600' height='280' viewBox='0 0 1600 280' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 134C110 116 220 78 332 84C444 90 558 140 670 154C782 168 896 148 1008 126C1120 104 1234 82 1346 92C1458 102 1530 128 1600 136V280H0V134Z' fill='%2344d0ff' fill-opacity='0.26'/%3E%3Cpath d='M0 156C110 176 220 206 332 202C444 198 558 160 670 146C782 132 896 142 1008 162C1120 182 1234 204 1346 198C1458 192 1530 168 1600 156V280H0V156Z' fill='%23005fff' fill-opacity='0.18'/%3E%3C/svg%3E")
+    url("data:image/svg+xml,%3Csvg width='1600' height='280' viewBox='0 0 1600 280' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 134C110 116 220 78 332 84C444 90 558 140 670 154C782 168 896 148 1008 126C1120 104 1234 82 1346 92C1458 102 1530 128 1600 136V280H0V134Z' fill='%2344d0ff' fill-opacity='0.26'/%3E%3Cpath d='M0 156C110 176 220 206 332 202C444 198 558 160 670 146C782 132 896 142 1008 162C1120 182 1234 204 1346 198C1458 192 1530 168 1600 156V280H0V156Z' fill='%23005fff' fill-opacity='0.18'/%3E%3C/svg%3E")
       no-repeat center / 100% 100%;
   opacity: 0.9;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
