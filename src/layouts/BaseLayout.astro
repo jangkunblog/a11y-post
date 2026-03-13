@@ -295,6 +295,12 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
               "The easiest method of creating a skip navigation link is to put it at or near the top of the page in regular text.",
             highlight: "at or near the top of the page"
           },
+          "https://www.w3.org/WAI/test-evaluate/easy-checks/skip-link/": {
+            origin: "W3C Easy Checks 본문",
+            excerpt:
+              "A skip link is the first interactive item on the page. It can be visually hidden until it gets keyboard focus. Once activated, keyboard focus moves to the main content area.",
+            highlight: "first interactive item on the page"
+          },
           "https://www.iana.org/assignments/language-subtags-tags-extensions/language-subtags-tags-extensions.xhtml": {
             origin: "본문 문단",
             excerpt: "This registry is obsolete and has been replaced by the [Language Subtag Registry].",
@@ -381,6 +387,12 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
             excerpt:
               "W3C Accessibility Guidelines (WCAG) 3.0 Working Draft is updated. The starting place for background, timeline, and up-to-date information is the WCAG 3 Introduction.",
             highlight: "Working Draft is updated"
+          },
+          "https://www.w3.org/blog/2021/wcag-3-fpwd/": {
+            origin: "W3C Blog 본문",
+            excerpt:
+              "WAI is pleased to publish the First Public Working Draft of WCAG 3.0, formerly known as Silver.",
+            highlight: "First Public Working Draft of WCAG 3.0"
           },
           "https://www.w3.org/WAI/standards-guidelines/": {
             origin: "페이지 설명(structured data)",
@@ -637,6 +649,7 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
           const slides = Array.from(slider.querySelectorAll(".anl-slide"));
           if (!slides.length) return;
 
+          const stage = slider.querySelector(".anl-slider-stage");
           const prevButton = slider.querySelector("[data-slider-prev]");
           const nextButton = slider.querySelector("[data-slider-next]");
           const status = slider.querySelector("[data-slider-status]");
@@ -644,6 +657,9 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
 
           let currentIndex = slides.findIndex((slide) => slide.classList.contains("is-active"));
           if (currentIndex < 0) currentIndex = 0;
+          let touchStartX = 0;
+          let touchStartY = 0;
+          let touchActive = false;
 
           const update = (nextIndex) => {
             currentIndex = (nextIndex + slides.length) % slides.length;
@@ -709,6 +725,47 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
               event.preventDefault();
               update(currentIndex + 1);
             }
+          });
+
+          stage?.addEventListener(
+            "touchstart",
+            (event) => {
+              const touch = event.changedTouches[0];
+              if (!touch) return;
+              touchStartX = touch.clientX;
+              touchStartY = touch.clientY;
+              touchActive = true;
+            },
+            { passive: true }
+          );
+
+          stage?.addEventListener(
+            "touchend",
+            (event) => {
+              if (!touchActive) return;
+              touchActive = false;
+
+              const touch = event.changedTouches[0];
+              if (!touch) return;
+
+              const deltaX = touch.clientX - touchStartX;
+              const deltaY = touch.clientY - touchStartY;
+
+              if (Math.abs(deltaX) < 36) return;
+              if (Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+              if (deltaX < 0) {
+                update(currentIndex + 1);
+                return;
+              }
+
+              update(currentIndex - 1);
+            },
+            { passive: true }
+          );
+
+          stage?.addEventListener("touchcancel", () => {
+            touchActive = false;
           });
 
           update(currentIndex);

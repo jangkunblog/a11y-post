@@ -44,9 +44,16 @@ W3C의 Publication History를 보면 문서 상태가 명확히 구분된다.<su
 
 W3C WCAG 3 Introduction은 WCAG 3.0을 불완전한 초안(incomplete draft)으로 명시한다.<sup><a class="cite-ref" href="https://www.w3.org/WAI/standards-guidelines/wcag/wcag3-intro/" title="[1] WCAG 3 Introduction (Updated 3 March 2026)" data-cite="[1] WCAG 3 Introduction (Updated 3 March 2026)" target="_blank" rel="noopener noreferrer">[1]</a></sup> 동시에 문서는 지속적으로 업데이트되며, 2026년 3월 리뷰 드래프트에서도 용어와 구조가 실제로 조정됐다.<sup><a class="cite-ref" href="https://www.w3.org/WAI/news/2026-03-03/wcag3/" title="[2] For Review: WCAG 3 Working Draft – March 2026" data-cite="[2] For Review: WCAG 3 Working Draft – March 2026" target="_blank" rel="noopener noreferrer">[2]</a></sup> 즉 이름만 유지되고 내용이 고정된 문서가 아니라, 공개 피드백을 흡수하며 점진적으로 정교화되는 문서다. 실무에서는 이 성격을 정확히 이해한 뒤 활용해야 한다.
 
+<figure>
+  <img src="https://www.w3.org/WAI/content-images/wai-intro-wcag/wcag3_social.png" alt="W3C가 공개한 WCAG 3 소개 이미지" />
+  <figcaption>W3C가 공개한 WCAG 3 소개 이미지</figcaption>
+</figure>
+
 ### 2026년 3월 시점에서 확인할 포인트
 
 가장 중요한 변화는 구조와 용어 체계가 계속 정리되고 있다는 점이다. 요구사항을 어떻게 묶고 설명할지, 테스트 가능성을 어떻게 높일지 같은 실질 요소가 아직 논의 중이다. 이 말은 곧 지금 당장 완결된 적합성 모델을 기대하면 안 된다는 뜻이기도 하다. 대신 변화 방향을 읽고 사전 준비 항목을 정리하는 데 가치를 둬야 한다.
+
+이 흐름의 중요한 공개 전환점은 2021년 1월 W3C Blog에서 WCAG 3.0 First Public Working Draft를 알리며, Silver 프로젝트에서 발전해 온 작업을 더 넓은 공개 검토 단계로 올렸다고 설명한 시점이다.<sup><a class="cite-ref" href="https://www.w3.org/blog/2021/wcag-3-fpwd/" title="[10] W3C Blog: WAI publishes WCAG 3.0 First Public Working Draft" data-cite="[10] W3C Blog: WAI publishes WCAG 3.0 First Public Working Draft" target="_blank" rel="noopener noreferrer">[10]</a></sup> 그래서 현재 글의 역사·현재 상태 구간은 2026년 리뷰 드래프트만이 아니라, 2021년 공개 초안 전환점을 기준으로도 읽을 수 있어야 맥락이 더 선명해진다.
 
 ### 지금 당장 운영 문서에 어떻게 표기할 것인가
 
@@ -164,3 +171,4 @@ WCAG 3.0은 아직 진행 중인 Working Draft이지만, 그래서 오히려 지
 7. WCAG 2.0 Publication History: https://www.w3.org/standards/history/WCAG20/
 8. WCAG 1.0 Publication History: https://www.w3.org/standards/history/WAI-WEBCONTENT/
 9. WCAG 3 GitHub issues: https://github.com/w3c/wcag3/issues
+10. W3C Blog, WAI publishes WCAG 3.0 First Public Working Draft: https://www.w3.org/blog/2021/wcag-3-fpwd/

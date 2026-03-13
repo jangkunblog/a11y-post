@@ -24,6 +24,9 @@ html,
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -37,6 +40,7 @@ body {
   text-align: left;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  overflow-x: hidden;
   position: relative;
 }
 
@@ -56,8 +60,8 @@ body::after {
   content: "";
   position: fixed;
   left: 0;
+  right: 0;
   top: 50%;
-  width: 100vw;
   height: clamp(180px, 24vw, 320px);
   transform: translateY(-50%);
   z-index: -1;
@@ -555,6 +559,25 @@ img {
   max-width: 100%;
   height: auto;
   border-radius: 16px;
+}
+
+.prose figure {
+  margin: 1.5rem 0 1.9rem;
+}
+
+.prose figure img {
+  display: block;
+  margin: 0 auto;
+  border: 1px solid rgba(24, 53, 101, 0.16);
+  box-shadow: 0 10px 24px -20px rgba(21, 44, 86, 0.28);
+}
+
+.prose figcaption {
+  margin-top: 0.72rem;
+  color: #51627f;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .anl-slider {

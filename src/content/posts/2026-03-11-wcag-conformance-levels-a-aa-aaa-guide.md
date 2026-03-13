@@ -14,6 +14,11 @@ tags:
   - design-system
 ---
 
+<figure>
+  <img src="/images/wcag-conformance-levels-map.svg" alt="WCAG 적합성 등급 A, AA, AAA의 포함 관계와 실무 기본선이 AA임을 보여주는 다이어그램" />
+  <figcaption>WCAG 적합성 등급의 포함 관계와 실무 기준선을 정리한 다이어그램</figcaption>
+</figure>
+
 접근성 문서를 처음 펼치면 가장 먼저 부딪히는 단어가 `Level A`, `Level AA`, `Level AAA`다. 표기 자체는 단순해 보이지만, 실제 업무에서는 이 세 등급이 목표 설정, 일정, 품질 기준, 출시 리스크까지 모두 바꾼다. 그래서 등급을 "높을수록 좋다"라는 직관으로만 다루면, 요구사항을 과소해석하거나 반대로 과도하게 적용해 일정이 무너지는 문제가 반복된다.
 
 이 글은 WCAG 적합성 등급을 점수표처럼 비교하는 방식이 아니라, 우리가 제품을 만들고 운영하는 관점에서 다시 정리한다. 무엇이 최소선이고, 무엇이 실무 기본선이며, 무엇을 전략적으로 선택해야 하는지 구분해서 본다. WCAG 2.2를 기준으로 현재 기준선을 명확히 두고,<sup><a class="cite-ref" href="https://www.w3.org/TR/WCAG22/#conformance" title="[1] WCAG 2.2 Conformance" data-cite="[1] WCAG 2.2 Conformance" target="_blank" rel="noopener noreferrer">[1]</a></sup> 역할별 적용 방법과 운영 체크리스트까지 연결한다.

@@ -1,0 +1,50 @@
+<svg width="1200" height="760" viewBox="0 0 1200 760" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">lang attribute signal map</title>
+  <desc id="desc">A diagram showing how the HTML lang attribute affects screen reader speech, braille translation, translation tools, font fallback, and sentence parsing.</desc>
+  <rect width="1200" height="760" rx="32" fill="#F7F9FC"/>
+  <rect x="28" y="28" width="1144" height="704" rx="28" fill="white" stroke="#D7E1EE" stroke-width="2"/>
+
+  <rect x="96" y="78" width="224" height="40" rx="20" fill="#EAF1FB"/>
+  <text x="208" y="103" text-anchor="middle" fill="#35507A" font-family="IBM Plex Sans, Arial, sans-serif" font-size="20" font-weight="600">Language Metadata</text>
+
+  <text x="96" y="168" fill="#18253B" font-family="IBM Plex Sans, Arial, sans-serif" font-size="48" font-weight="700">The `lang` Attribute Sets the Reading Context</text>
+  <text x="96" y="208" fill="#5A6B85" font-family="IBM Plex Sans, Arial, sans-serif" font-size="24">One small attribute becomes the baseline signal for assistive tech and text processing.</text>
+
+  <line x1="600" y1="330" x2="320" y2="470" stroke="#C6D4E7" stroke-width="4"/>
+  <line x1="600" y1="330" x2="880" y2="470" stroke="#C6D4E7" stroke-width="4"/>
+  <line x1="600" y1="330" x2="600" y2="550" stroke="#C6D4E7" stroke-width="4"/>
+  <line x1="600" y1="330" x2="600" y2="168" stroke="#C6D4E7" stroke-width="4"/>
+  <line x1="600" y1="330" x2="920" y2="250" stroke="#C6D4E7" stroke-width="4"/>
+
+  <rect x="420" y="248" width="360" height="164" rx="28" fill="#F3F7FD" stroke="#C9D7EA" stroke-width="2"/>
+  <rect x="456" y="286" width="288" height="54" rx="16" fill="#16253A"/>
+  <text x="600" y="321" text-anchor="middle" fill="white" font-family="SFMono-Regular, Consolas, monospace" font-size="28" font-weight="600">&lt;html lang="ko"&gt;</text>
+  <text x="600" y="364" text-anchor="middle" fill="#51627F" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22">Default language signal for the entire document</text>
+
+  <rect x="118" y="450" width="290" height="122" rx="24" fill="#FFF7EE" stroke="#E8D3B4" stroke-width="2"/>
+  <text x="148" y="492" fill="#8C5A19" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="700">Screen Reader Speech</text>
+  <text x="148" y="527" fill="#6E5B42" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">Pronunciation rules, accent,</text>
+  <text x="148" y="554" fill="#6E5B42" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">and TTS voice selection</text>
+
+  <rect x="470" y="560" width="260" height="122" rx="24" fill="#F2FBF6" stroke="#C6E3D1" stroke-width="2"/>
+  <text x="500" y="602" fill="#1D6B4C" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="700">Braille Conversion</text>
+  <text x="500" y="637" fill="#4F6C60" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">Correct tables and</text>
+  <text x="500" y="664" fill="#4F6C60" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">language-specific output</text>
+
+  <rect x="792" y="450" width="290" height="122" rx="24" fill="#F4F3FD" stroke="#D1D0EC" stroke-width="2"/>
+  <text x="822" y="492" fill="#5041A5" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="700">Translation Tools</text>
+  <text x="822" y="527" fill="#5B6181" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">Source language detection</text>
+  <text x="822" y="554" fill="#5B6181" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">and machine translation hints</text>
+
+  <rect x="460" y="108" width="280" height="108" rx="24" fill="#EEF7FE" stroke="#C7DDED" stroke-width="2"/>
+  <text x="490" y="150" fill="#155E8E" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="700">Font and Script Handling</text>
+  <text x="490" y="185" fill="#567084" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">Fallback, shaping,</text>
+  <text x="490" y="212" fill="#567084" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">and script-aware rendering</text>
+
+  <rect x="832" y="174" width="244" height="108" rx="24" fill="#FFF3F6" stroke="#E7CCD5" stroke-width="2"/>
+  <text x="862" y="216" fill="#A14663" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="700">Sentence Parsing</text>
+  <text x="862" y="251" fill="#7B6170" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">Segmentation, tokenization,</text>
+  <text x="862" y="278" fill="#7B6170" font-family="IBM Plex Sans, Arial, sans-serif" font-size="19">and language-aware rules</text>
+
+  <text x="96" y="684" fill="#75849B" font-family="IBM Plex Sans, Arial, sans-serif" font-size="18">If the default language is empty or wrong, every downstream tool starts with the wrong assumption.</text>
+</svg>

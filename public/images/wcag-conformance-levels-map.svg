@@ -1,0 +1,34 @@
+<svg width="1200" height="760" viewBox="0 0 1200 760" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">WCAG conformance levels map</title>
+  <desc id="desc">A diagram showing the inclusive relationship between Level A, AA, and AAA, with AA highlighted as the practical operational baseline.</desc>
+  <rect width="1200" height="760" rx="32" fill="#F7F9FC"/>
+  <rect x="28" y="28" width="1144" height="704" rx="28" fill="white" stroke="#D7E1EE" stroke-width="2"/>
+
+  <rect x="92" y="76" width="250" height="40" rx="20" fill="#EAF1FB"/>
+  <text x="217" y="101" text-anchor="middle" fill="#35507A" font-family="IBM Plex Sans, Arial, sans-serif" font-size="20" font-weight="600">WCAG Conformance Levels</text>
+
+  <text x="92" y="164" fill="#18253B" font-family="IBM Plex Sans, Arial, sans-serif" font-size="46" font-weight="700">A, AA, AAA Are Not Scores</text>
+  <text x="92" y="204" fill="#5A6B85" font-family="IBM Plex Sans, Arial, sans-serif" font-size="24">They are nested requirement sets with different operational cost and coverage.</text>
+
+  <rect x="176" y="252" width="848" height="338" rx="40" fill="#F6F9FD" stroke="#D3DEEC" stroke-width="2"/>
+  <rect x="252" y="314" width="696" height="214" rx="34" fill="#EAF2FD" stroke="#C7D8EE" stroke-width="2"/>
+  <rect x="360" y="380" width="480" height="88" rx="24" fill="#18335D"/>
+
+  <text x="600" y="288" text-anchor="middle" fill="#58708D" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="600">Level AAA</text>
+  <text x="600" y="344" text-anchor="middle" fill="#48617E" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="600">Level AA</text>
+  <text x="600" y="434" text-anchor="middle" fill="white" font-family="IBM Plex Sans, Arial, sans-serif" font-size="28" font-weight="700">Level A</text>
+
+  <text x="600" y="571" text-anchor="middle" fill="#6A7B93" font-family="IBM Plex Sans, Arial, sans-serif" font-size="20">AA includes A, and AAA includes both A and AA.</text>
+
+  <rect x="86" y="620" width="324" height="74" rx="22" fill="#FFF6E9" stroke="#E8D5B7" stroke-width="2"/>
+  <text x="118" y="652" fill="#8C5A19" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="700">Level A</text>
+  <text x="118" y="679" fill="#6E5B42" font-family="IBM Plex Sans, Arial, sans-serif" font-size="18">Minimum viable accessibility baseline</text>
+
+  <rect x="438" y="620" width="324" height="74" rx="22" fill="#EDF8F1" stroke="#CBE3D1" stroke-width="2"/>
+  <text x="470" y="652" fill="#1E6B4C" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="700">Level AA</text>
+  <text x="470" y="679" fill="#4F6C60" font-family="IBM Plex Sans, Arial, sans-serif" font-size="18">Practical default for product operations</text>
+
+  <rect x="790" y="620" width="324" height="74" rx="22" fill="#F3F1FD" stroke="#D5D0EE" stroke-width="2"/>
+  <text x="822" y="652" fill="#5041A5" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" font-weight="700">Level AAA</text>
+  <text x="822" y="679" fill="#5B6181" font-family="IBM Plex Sans, Arial, sans-serif" font-size="18">Selective enhancement, not blanket policy</text>
+</svg>
