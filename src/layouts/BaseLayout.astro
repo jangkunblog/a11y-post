@@ -572,6 +572,13 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
           });
         };
 
+        const citationUrlCounts = citationLinks.reduce((counts, link) => {
+          const href = (link.getAttribute("href") || "").replace(/#.*$/, "").replace(/\/$/, "");
+          if (!href) return counts;
+          counts.set(href, (counts.get(href) || 0) + 1);
+          return counts;
+        }, new Map());
+
         citationLinks.forEach((link) => {
           if (link.dataset.citeReady === "true") return;
           link.dataset.citeReady = "true";
@@ -600,14 +607,16 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
             sourceExcerptRegistry[normalizedSourceUrlNoSlash] ||
             sourceExcerptRegistry[normalizedSourceUrlWithSlash] ||
             null;
+          const inlineSourceExcerpt = normalizeText(link.getAttribute("data-cite-source-excerpt"));
+          const inlineSourceExcerptOrigin = normalizeText(link.getAttribute("data-cite-source-origin"));
+          const inlineSourceHighlight = normalizeText(link.getAttribute("data-cite-highlight"));
+          const isRepeatedSource = (citationUrlCounts.get(normalizedSourceUrlNoSlash) || 0) > 1;
           const sourceExcerpt =
-            normalizeText(link.getAttribute("data-cite-source-excerpt")) || normalizeText(registryMatch?.excerpt);
+            inlineSourceExcerpt || (!isRepeatedSource ? normalizeText(registryMatch?.excerpt) : "");
           const sourceExcerptOrigin =
-            normalizeText(link.getAttribute("data-cite-source-origin")) ||
-            normalizeText(registryMatch?.origin);
+            inlineSourceExcerptOrigin || (!isRepeatedSource ? normalizeText(registryMatch?.origin) : "");
           const sourceHighlight =
-            normalizeText(link.getAttribute("data-cite-highlight")) ||
-            normalizeText(registryMatch?.highlight);
+            inlineSourceHighlight || (!isRepeatedSource ? normalizeText(registryMatch?.highlight) : "");
           const excerptLabelText = sourceExcerpt
             ? sourceExcerptOrigin
               ? `원문 발췌 (${sourceExcerptOrigin})`
