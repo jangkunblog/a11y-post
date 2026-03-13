@@ -167,9 +167,9 @@ sup.cite-wrap {
 
 .cite-tooltip {
   position: absolute;
-  left: 50%;
-  top: 100%;
-  transform: translateX(-50%) translateY(6px);
+  left: var(--cite-tooltip-left, 50%);
+  top: calc(100% + var(--cite-tooltip-offset-y, 6px));
+  transform: translateX(var(--cite-tooltip-shift, -50%));
   width: var(--cite-tooltip-width);
   padding: 0.68rem 0.78rem 0.72rem;
   border-radius: 13px;
@@ -180,17 +180,17 @@ sup.cite-wrap {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+  transition: opacity 0.18s ease, top 0.18s ease, visibility 0.18s ease;
   z-index: 280;
 }
 
 sup.cite-wrap:hover .cite-tooltip,
 sup.cite-wrap:focus-within .cite-tooltip,
 sup.cite-wrap.is-open .cite-tooltip {
+  --cite-tooltip-offset-y: 0px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: translateX(-50%) translateY(0);
 }
 
 .cite-tooltip-head {
@@ -831,13 +831,5 @@ table td {
 
   .cite-tooltip {
     width: var(--cite-tooltip-width);
-    left: 0;
-    transform: translateX(0) translateY(6px);
-  }
-
-  sup.cite-wrap:hover .cite-tooltip,
-  sup.cite-wrap:focus-within .cite-tooltip,
-  sup.cite-wrap.is-open .cite-tooltip {
-    transform: translateX(0) translateY(0);
   }
 }

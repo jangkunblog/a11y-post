@@ -478,6 +478,60 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
           });
         };
 
+        const positionTooltip = (wrapper) => {
+          if (!(wrapper instanceof HTMLElement)) return;
+          const tooltip = wrapper.querySelector(".cite-tooltip");
+          if (!(tooltip instanceof HTMLElement)) return;
+
+          tooltip.style.removeProperty("--cite-tooltip-left");
+          tooltip.style.removeProperty("--cite-tooltip-shift");
+          tooltip.style.removeProperty("max-width");
+
+          const boundary =
+            wrapper.closest(".prose") ||
+            wrapper.closest(".post-list-item") ||
+            wrapper.closest(".site-main") ||
+            document.body;
+          if (!(boundary instanceof HTMLElement)) return;
+
+          const boundaryRect = boundary.getBoundingClientRect();
+          const wrapperRect = wrapper.getBoundingClientRect();
+          let tooltipRect = tooltip.getBoundingClientRect();
+          const gutter = 10;
+
+          const maxAllowedWidth = Math.max(180, boundaryRect.width - gutter * 2);
+          if (tooltipRect.width > maxAllowedWidth) {
+            tooltip.style.maxWidth = `${Math.floor(maxAllowedWidth)}px`;
+            tooltipRect = tooltip.getBoundingClientRect();
+          }
+
+          const minLeft = boundaryRect.left + gutter - wrapperRect.left;
+          const maxLeft = boundaryRect.right - gutter - wrapperRect.left - tooltipRect.width;
+          let left = wrapperRect.width / 2 - tooltipRect.width / 2;
+
+          if (minLeft <= maxLeft) {
+            left = Math.min(Math.max(left, minLeft), maxLeft);
+          } else {
+            left = minLeft;
+          }
+
+          tooltip.style.setProperty("--cite-tooltip-left", `${Math.round(left)}px`);
+          tooltip.style.setProperty("--cite-tooltip-shift", "0px");
+        };
+
+        const positionVisibleTooltips = () => {
+          citeWrappers.forEach((wrapper) => {
+            if (!(wrapper instanceof HTMLElement)) return;
+            if (
+              wrapper.classList.contains("is-open") ||
+              wrapper.matches(":hover") ||
+              wrapper.matches(":focus-within")
+            ) {
+              positionTooltip(wrapper);
+            }
+          });
+        };
+
         citationLinks.forEach((link) => {
           if (link.dataset.citeReady === "true") return;
           link.dataset.citeReady = "true";
@@ -596,6 +650,7 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
             const isOpen = wrapper.classList.contains("is-open");
             closeAll();
             if (!isOpen) {
+              positionTooltip(wrapper);
               wrapper.classList.add("is-open");
               link.setAttribute("aria-expanded", "true");
               const tooltip = wrapper.querySelector(".cite-tooltip");
@@ -613,7 +668,12 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
             }
           });
 
+          link.addEventListener("focus", () => {
+            positionTooltip(wrapper);
+          });
+
           wrapper.addEventListener("mouseenter", () => {
+            positionTooltip(wrapper);
             const tooltip = wrapper.querySelector(".cite-tooltip");
             if (tooltip) tooltip.setAttribute("aria-hidden", "false");
           });
@@ -639,6 +699,9 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
             closeAll();
           }
         });
+
+        window.addEventListener("resize", positionVisibleTooltips, { passive: true });
+        window.addEventListener("scroll", positionVisibleTooltips, { passive: true });
       })();
 
       (() => {
