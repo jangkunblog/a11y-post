@@ -138,6 +138,59 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
             excerpt: "Claude API Documentation.",
             highlight: "API Documentation"
           },
+          "https://www.apple.com/newsroom/2025/05/apple-unveils-powerful-accessibility-features-coming-later-this-year/": {
+            origin: "Apple Newsroom 본문",
+            excerpt:
+              "Accessibility Nutrition Labels bring a new section to App Store product pages that will highlight accessibility features within apps and games.",
+            highlight: "new section to App Store product pages"
+          },
+          "https://www.apple.com/newsroom/2025/06/apple-supercharges-its-tools-and-technologies-for-developers/": {
+            origin: "Apple Newsroom 본문",
+            excerpt:
+              "New Accessibility Nutrition Labels for App Store product pages help users learn which accessibility features are supported before they download an app or game.",
+            highlight: "before they download an app or game"
+          },
+          "https://developer.apple.com/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels/": {
+            origin: "App Store Connect Help 본문",
+            excerpt:
+              "Providing these labels will be voluntary to start, but over time, you’ll be required to share accessibility support details to submit new apps and app updates.",
+            highlight: "required to share accessibility support details"
+          },
+          "https://developer.apple.com/kr/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels": {
+            origin: "App Store Connect 도움말 본문",
+            excerpt:
+              "앱을 준비하고 평가할 수 있는 시간을 제공하기 위해 초기에는 이 레이블 제공이 자율적으로 진행됩니다. 향후에는 이 정보 제공이 필수가 될 예정이며, 새로운 앱이나 앱 업데이트를 App Store에 제출하려면 손쉬운 사용 지원 정보를 제공해야 합니다.",
+            highlight: "향후에는 이 정보 제공이 필수가 될 예정"
+          },
+          "https://developer.apple.com/help/app-store-connect/manage-app-accessibility/manage-accessibility-nutrition-labels/": {
+            origin: "App Store Connect Help 본문",
+            excerpt:
+              "The responses will be published immediately but may require up to 24 hours to be visible to all users.",
+            highlight: "may require up to 24 hours"
+          },
+          "https://developer.apple.com/app-store/review/guidelines/": {
+            origin: "App Review Guidelines §2.3",
+            excerpt:
+              "Customers should know what they’re getting when they download or buy your app, so make sure all your app metadata accurately reflect the app’s core experience.",
+            highlight: "all your app metadata"
+          },
+          "https://developer.apple.com/help/app-store-connect/manage-app-accessibility/voiceover-evaluation-criteria/": {
+            origin: "App Store Connect Help 본문",
+            excerpt:
+              "Re-evaluate your app's support for VoiceOver every time you update your app.",
+            highlight: "every time you update your app"
+          },
+          "https://developer.apple.com/documentation/appstoreconnectapi": {
+            origin: "Apple Developer Documentation (meta description)",
+            excerpt:
+              "Automate the tasks you perform on the Apple Developer website and in App Store Connect.",
+            highlight: "Automate the tasks you perform"
+          },
+          "https://eur-lex.europa.eu/eli/dir/2019/882/oj": {
+            origin: "Directive (EU) 2019/882 Article 31(2)",
+            excerpt: "They shall apply those measures from 28 June 2025.",
+            highlight: "from 28 June 2025"
+          },
           "https://github.com/w3c/wcag3/issues": {
             origin: "페이지 설명(meta description)",
             excerpt: "WCAG 3. Contribute to w3c/wcag3 development by creating an account on GitHub.",
@@ -367,8 +420,16 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
             normalizeText(matchedReference?.textContent) ||
             "원문 자료";
           const normalizedSourceUrl = sourceUrl.replace(/#.*$/, "");
+          const normalizedSourceUrlNoSlash = normalizedSourceUrl.replace(/\/$/, "");
+          const normalizedSourceUrlWithSlash = normalizedSourceUrlNoSlash
+            ? `${normalizedSourceUrlNoSlash}/`
+            : normalizedSourceUrl;
           const registryMatch =
-            sourceExcerptRegistry[sourceUrl] || sourceExcerptRegistry[normalizedSourceUrl] || null;
+            sourceExcerptRegistry[sourceUrl] ||
+            sourceExcerptRegistry[normalizedSourceUrl] ||
+            sourceExcerptRegistry[normalizedSourceUrlNoSlash] ||
+            sourceExcerptRegistry[normalizedSourceUrlWithSlash] ||
+            null;
           const sourceExcerpt =
             normalizeText(link.getAttribute("data-cite-source-excerpt")) || normalizeText(registryMatch?.excerpt);
           const sourceExcerptOrigin =
@@ -501,6 +562,92 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
           if (event.key === "Escape") {
             closeAll();
           }
+        });
+      })();
+
+      (() => {
+        const sliders = Array.from(document.querySelectorAll("[data-anl-slider]"));
+        if (!sliders.length) return;
+
+        sliders.forEach((slider) => {
+          const slides = Array.from(slider.querySelectorAll(".anl-slide"));
+          if (!slides.length) return;
+
+          const prevButton = slider.querySelector("[data-slider-prev]");
+          const nextButton = slider.querySelector("[data-slider-next]");
+          const status = slider.querySelector("[data-slider-status]");
+          const dots = Array.from(slider.querySelectorAll("[data-slider-dot]"));
+
+          let currentIndex = slides.findIndex((slide) => slide.classList.contains("is-active"));
+          if (currentIndex < 0) currentIndex = 0;
+
+          const update = (nextIndex) => {
+            currentIndex = (nextIndex + slides.length) % slides.length;
+
+            slides.forEach((slide, index) => {
+              const isActive = index === currentIndex;
+              slide.classList.toggle("is-active", isActive);
+              slide.hidden = !isActive;
+              slide.setAttribute("aria-hidden", String(!isActive));
+            });
+
+            dots.forEach((dot, index) => {
+              const isActive = index === currentIndex;
+              dot.classList.toggle("is-active", isActive);
+              dot.setAttribute("aria-selected", String(isActive));
+              dot.setAttribute("tabindex", isActive ? "0" : "-1");
+            });
+
+            if (status) {
+              status.textContent = `${currentIndex + 1} / ${slides.length}`;
+            }
+          };
+
+          prevButton?.addEventListener("click", () => {
+            update(currentIndex - 1);
+          });
+
+          nextButton?.addEventListener("click", () => {
+            update(currentIndex + 1);
+          });
+
+          dots.forEach((dot, index) => {
+            dot.addEventListener("click", () => {
+              update(index);
+            });
+
+            dot.addEventListener("keydown", (event) => {
+              if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                update(currentIndex - 1);
+              }
+              if (event.key === "ArrowRight") {
+                event.preventDefault();
+                update(currentIndex + 1);
+              }
+              if (event.key === "Home") {
+                event.preventDefault();
+                update(0);
+              }
+              if (event.key === "End") {
+                event.preventDefault();
+                update(slides.length - 1);
+              }
+            });
+          });
+
+          slider.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft") {
+              event.preventDefault();
+              update(currentIndex - 1);
+            }
+            if (event.key === "ArrowRight") {
+              event.preventDefault();
+              update(currentIndex + 1);
+            }
+          });
+
+          update(currentIndex);
         });
       })();
     </script>
