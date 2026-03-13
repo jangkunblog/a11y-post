@@ -54,6 +54,46 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
     >
       <slot />
     </main>
+    {
+      isPostDetail && (
+        <>
+          <div class="floating-tools" data-floating-tools hidden>
+            <button
+              type="button"
+              class="floating-tool-button floating-toc-toggle"
+              data-toc-toggle
+              aria-controls="floating-toc-panel"
+              aria-expanded="false"
+            >
+              목차
+            </button>
+            <button
+              type="button"
+              class="floating-tool-button floating-top-button"
+              data-scroll-top
+              aria-label="맨 위로 이동"
+            >
+              ↑
+            </button>
+          </div>
+          <aside
+            id="floating-toc-panel"
+            class="floating-toc-panel"
+            data-floating-toc
+            hidden
+            aria-hidden="true"
+          >
+            <div class="floating-toc-head">
+              <h2>목차</h2>
+              <button type="button" class="floating-toc-close" data-toc-close aria-label="목차 닫기">닫기</button>
+            </div>
+            <nav class="floating-toc-nav" aria-label="문서 목차">
+              <ol class="floating-toc-list" data-toc-list></ol>
+            </nav>
+          </aside>
+        </>
+      )
+    }
     <footer class="site-footer">
       <p>&copy; 2026 디지털 접근성 아카이브. All rights reserved.</p>
     </footer>
@@ -837,6 +877,168 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
 
           update(currentIndex);
         });
+      })();
+
+      (() => {
+        const tools = document.querySelector("[data-floating-tools]");
+        const toggleButton = document.querySelector("[data-toc-toggle]");
+        const topButton = document.querySelector("[data-scroll-top]");
+        const panel = document.querySelector("[data-floating-toc]");
+        const closeButton = document.querySelector("[data-toc-close]");
+        const tocList = document.querySelector("[data-toc-list]");
+        const content = document.querySelector(".prose");
+
+        if (
+          !(tools instanceof HTMLElement) ||
+          !(toggleButton instanceof HTMLButtonElement) ||
+          !(topButton instanceof HTMLButtonElement) ||
+          !(panel instanceof HTMLElement) ||
+          !(closeButton instanceof HTMLButtonElement) ||
+          !(tocList instanceof HTMLOListElement) ||
+          !(content instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const normalizeText = (value) => (value || "").replace(/\s+/g, " ").trim();
+        const slugCounts = new Map();
+        const headings = Array.from(content.querySelectorAll("h2, h3")).filter(
+          (heading) => normalizeText(heading.textContent).length > 0
+        );
+
+        if (!headings.length) return;
+
+        const getUniqueId = (text) => {
+          const base = normalizeText(text)
+            .toLowerCase()
+            .replace(/[^\w\u3131-\u318e\uac00-\ud7a3]+/g, "-")
+            .replace(/^-+|-+$/g, "") || "section";
+          const count = slugCounts.get(base) || 0;
+          slugCounts.set(base, count + 1);
+          if (count === 0) return base;
+          return `${base}-${count + 1}`;
+        };
+
+        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const scrollBehavior = prefersReducedMotion ? "auto" : "smooth";
+        let panelOpen = false;
+
+        const openPanel = () => {
+          panel.hidden = false;
+          panel.setAttribute("aria-hidden", "false");
+          toggleButton.setAttribute("aria-expanded", "true");
+          panelOpen = true;
+          const firstLink = panel.querySelector("a.floating-toc-link");
+          if (firstLink instanceof HTMLElement) firstLink.focus();
+        };
+
+        const closePanel = () => {
+          panel.hidden = true;
+          panel.setAttribute("aria-hidden", "true");
+          toggleButton.setAttribute("aria-expanded", "false");
+          panelOpen = false;
+          toggleButton.focus();
+        };
+
+        const getHeaderOffset = () => {
+          const header = document.querySelector(".site-header");
+          if (!(header instanceof HTMLElement)) return 20;
+          return header.getBoundingClientRect().height + 18;
+        };
+
+        const scrollToHeading = (heading) => {
+          const top = heading.getBoundingClientRect().top + window.scrollY - getHeaderOffset();
+          window.scrollTo({ top: Math.max(top, 0), behavior: scrollBehavior });
+        };
+
+        const tocLinks = headings.map((heading) => {
+          if (!heading.id) heading.id = getUniqueId(heading.textContent || "");
+
+          heading.style.scrollMarginTop = `${Math.round(getHeaderOffset() + 4)}px`;
+
+          const li = document.createElement("li");
+          li.className = `floating-toc-item floating-toc-${heading.tagName.toLowerCase()}`;
+
+          const link = document.createElement("a");
+          link.className = "floating-toc-link";
+          link.href = `#${heading.id}`;
+          link.textContent = normalizeText(heading.textContent);
+          link.setAttribute("data-heading-id", heading.id);
+
+          link.addEventListener("click", (event) => {
+            event.preventDefault();
+            scrollToHeading(heading);
+            closePanel();
+          });
+
+          li.appendChild(link);
+          tocList.appendChild(li);
+          return { heading, link };
+        });
+
+        const updateActiveHeading = () => {
+          const offset = getHeaderOffset() + 8;
+          let activeIndex = 0;
+          tocLinks.forEach(({ heading }, index) => {
+            const top = heading.getBoundingClientRect().top;
+            if (top - offset <= 0) activeIndex = index;
+          });
+
+          tocLinks.forEach(({ link }, index) => {
+            const isActive = index === activeIndex;
+            link.classList.toggle("is-active", isActive);
+            link.setAttribute("aria-current", isActive ? "true" : "false");
+          });
+        };
+
+        const updateTopButton = () => {
+          topButton.classList.toggle("is-visible", window.scrollY > 260);
+        };
+
+        toggleButton.addEventListener("click", () => {
+          if (panelOpen) {
+            closePanel();
+            return;
+          }
+          openPanel();
+        });
+
+        closeButton.addEventListener("click", () => {
+          closePanel();
+        });
+
+        topButton.addEventListener("click", () => {
+          window.scrollTo({ top: 0, behavior: scrollBehavior });
+        });
+
+        document.addEventListener("click", (event) => {
+          if (!panelOpen) return;
+          const target = event.target;
+          if (!(target instanceof Node)) return;
+          if (panel.contains(target) || toggleButton.contains(target)) return;
+          closePanel();
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && panelOpen) {
+            closePanel();
+          }
+        });
+
+        window.addEventListener(
+          "scroll",
+          () => {
+            updateTopButton();
+            updateActiveHeading();
+          },
+          { passive: true }
+        );
+
+        window.addEventListener("resize", updateActiveHeading);
+
+        tools.hidden = false;
+        updateTopButton();
+        updateActiveHeading();
       })();
     </script>
   </body>
