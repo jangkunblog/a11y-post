@@ -8,7 +8,8 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "post:generate": "node scripts/generate-post-from-keyword.mjs"
+    "post:generate": "node scripts/generate-post-from-keyword.mjs",
+    "redeploy:prod": "node -e \"const hook = process.env.VERCEL_DEPLOY_HOOK_URL; if (!hook) { console.error('Missing VERCEL_DEPLOY_HOOK_URL'); process.exit(1); } const url = new URL(hook); url.searchParams.set('buildCache', 'false'); fetch(url, { method: 'POST' }).then(async (res) => { const text = await res.text(); if (!res.ok) { console.error(text || res.statusText); process.exit(1); } console.log(text || 'Redeploy triggered'); }).catch((err) => { console.error(err); process.exit(1); });\""
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.11",

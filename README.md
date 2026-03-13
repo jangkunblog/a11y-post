@@ -40,3 +40,14 @@ npm run post:generate -- --keyword "주제"
 
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL` (기본 `gpt-4o-mini`)
+
+## Vercel 재배포
+
+Vercel 프로젝트에 `Deploy Hook`을 만들어 `VERCEL_DEPLOY_HOOK_URL` 환경 변수로 넣어두면, 새 커밋 없이도 재배포를 바로 실행할 수 있다.
+
+```bash
+export VERCEL_DEPLOY_HOOK_URL="https://api.vercel.com/v1/integrations/deploy/..."
+npm run redeploy:prod
+```
+
+이 스크립트는 `buildCache=false`를 붙여 캐시 없이 프로덕션 재배포를 트리거한다.
