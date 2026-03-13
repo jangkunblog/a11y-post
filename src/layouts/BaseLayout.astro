@@ -613,6 +613,9 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
             externalLink.textContent = "출처 보기";
             externalLink.setAttribute("title", "원문을 새 창에서 열기");
 
+            const actions = document.createElement("span");
+            actions.className = "cite-tooltip-actions";
+
             const excerptLabel = document.createElement("span");
             excerptLabel.className = "cite-quote-label";
             excerptLabel.textContent = excerptLabelText;
@@ -623,10 +626,11 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
 
             header.appendChild(jumpLink);
             header.appendChild(sourceTitle);
-            header.appendChild(externalLink);
+            actions.appendChild(externalLink);
             tooltip.appendChild(header);
             tooltip.appendChild(excerptLabel);
             tooltip.appendChild(excerpt);
+            tooltip.appendChild(actions);
             wrapper.appendChild(tooltip);
 
             jumpLink.addEventListener("click", () => {

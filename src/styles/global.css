@@ -195,7 +195,7 @@ sup.cite-wrap.is-open .cite-tooltip {
 
 .cite-tooltip-head {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   gap: 0.44rem;
   align-items: center;
 }
@@ -251,6 +251,12 @@ sup.cite-wrap.is-open .cite-tooltip {
   color: #0a4bba;
   border-color: rgba(15, 62, 144, 0.44);
   background: #f7fbff;
+}
+
+.cite-tooltip-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.56rem;
 }
 
 .cite-quote-label {
