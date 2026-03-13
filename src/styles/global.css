@@ -297,6 +297,7 @@ sup.cite-wrap.is-open .cite-tooltip {
 .site-nav {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   min-height: 64px;
   width: min(1120px, calc(100% - 2.5rem));
   margin: 0 auto;
@@ -317,6 +318,38 @@ sup.cite-wrap.is-open .cite-tooltip {
 
 .brand a:hover {
   color: var(--link);
+}
+
+.site-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.site-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0.3rem 0.82rem;
+  border-radius: 999px;
+  color: #37527f;
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 560;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.site-nav-link:hover {
+  background: rgba(13, 100, 244, 0.08);
+}
+
+.site-nav-link.is-active {
+  color: #0c4fc0;
+  background: rgba(13, 100, 244, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(13, 100, 244, 0.14);
 }
 
 .site-main {
@@ -528,6 +561,35 @@ p {
 .prose h3 {
   margin-top: 2.2rem;
   margin-bottom: 0.8rem;
+}
+
+.prose-issue-report h2 {
+  margin-top: 4.4rem;
+  margin-bottom: 1.35rem;
+  padding: 0.88rem 1.15rem 0.95rem;
+  border: 1px solid rgba(34, 74, 142, 0.14);
+  border-bottom: 1px solid rgba(34, 74, 142, 0.14);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(238, 245, 255, 0.98) 0%, rgba(232, 241, 255, 0.92) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.prose-issue-report h3 {
+  margin-top: 2.5rem;
+  margin-bottom: 0.9rem;
+  font-size: clamp(1.5rem, 2.15vw, 1.86rem);
+  padding-bottom: 0.46rem;
+  border-bottom: 2px solid rgba(31, 75, 150, 0.16);
+}
+
+.prose-issue-report h3 + ul {
+  font-size: 0.92em;
+  line-height: 1.58;
+  margin-bottom: 1.05rem;
+}
+
+.prose-issue-report h3 + ul li {
+  margin-bottom: 0.24rem;
 }
 
 .prose h4,

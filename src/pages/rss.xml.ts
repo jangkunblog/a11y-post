@@ -1,6 +1,6 @@
 import rss from "@astrojs/rss";
 import { getCollection } from "astro:content";
-import { getVisiblePosts } from "../utils/posts";
+import { getPostUrl, getVisiblePosts } from "../utils/posts";
 
 export async function GET(context: { site: URL }) {
   const posts = getVisiblePosts(await getCollection("posts"));
@@ -13,7 +13,7 @@ export async function GET(context: { site: URL }) {
       title: post.data.title,
       pubDate: post.data.pubDatetime,
       description: post.data.description,
-      link: `/posts/${post.slug}/`
+      link: getPostUrl(post)
     }))
   });
 }

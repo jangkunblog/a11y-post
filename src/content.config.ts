@@ -8,7 +8,8 @@ const posts = defineCollection({
     draft: z.boolean().default(false),
     featured: z.boolean().default(false),
     author: z.string().default("관리자"),
-    tags: z.array(z.string()).default([])
+    tags: z.array(z.string()).default([]),
+    postType: z.enum(["default", "issue-report"]).default("default")
   })
 });
 

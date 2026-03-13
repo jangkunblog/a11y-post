@@ -2,9 +2,9 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PostCard from "../../components/PostCard.astro";
-import { getVisiblePosts } from "../../utils/posts";
+import { getVisibleStandardPosts } from "../../utils/posts";
 
-const allPosts = getVisiblePosts(await getCollection("posts"));
+const allPosts = getVisibleStandardPosts(await getCollection("posts"));
 const selectedTag = Astro.url.searchParams.get("tag");
 const posts = selectedTag
   ? allPosts.filter((post) => post.data.tags.includes(selectedTag))

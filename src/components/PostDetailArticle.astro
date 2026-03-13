@@ -1,0 +1,35 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getTitleParts } from "../utils/posts";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+const rawTitle = post.data.title.trim();
+const { titleMain, titleSub } = getTitleParts(rawTitle);
+---
+
+<article>
+  <div class:list={["prose", post.data.postType === "issue-report" && "prose-issue-report"]}>
+    <div class="title">
+      <div class="date">
+        <time datetime={post.data.pubDatetime.toISOString()}>
+          {post.data.pubDatetime.toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          })}
+        </time>
+      </div>
+      <h1 class="post-detail-title" aria-label={rawTitle}>
+        <span class="post-detail-title-main">{titleMain}</span>
+        {titleSub && <span class="post-detail-title-sub">{titleSub}</span>}
+      </h1>
+      <hr />
+    </div>
+    <Content />
+  </div>
+</article>

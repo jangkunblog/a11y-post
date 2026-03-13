@@ -9,7 +9,7 @@ export async function getStaticPaths() {
   const now = new Date();
 
   return posts
-    .filter((post) => !post.data.draft && post.data.pubDatetime <= now && !isIssueReport(post))
+    .filter((post) => !post.data.draft && post.data.pubDatetime <= now && isIssueReport(post))
     .map((post) => ({
       params: { slug: post.slug },
       props: { post }

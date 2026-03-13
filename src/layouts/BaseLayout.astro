@@ -15,7 +15,13 @@ const pathname = Astro.url.pathname;
 const normalizedPath = pathname.endsWith("/") ? pathname : `${pathname}/`;
 const isHome = normalizedPath === "/";
 const isPostsIndex = normalizedPath === "/posts/";
-const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== "/posts/";
+const isIssuesIndex = normalizedPath === "/issues/";
+const isContentIndex = isPostsIndex || isIssuesIndex;
+const isPostDetail =
+  (normalizedPath.startsWith("/posts/") && normalizedPath !== "/posts/") ||
+  (normalizedPath.startsWith("/issues/") && normalizedPath !== "/issues/");
+const isPostsRoute = isPostsIndex || (normalizedPath.startsWith("/posts/") && normalizedPath !== "/posts/");
+const isIssuesRoute = isIssuesIndex || (normalizedPath.startsWith("/issues/") && normalizedPath !== "/issues/");
 ---
 
 <!doctype html>
@@ -41,6 +47,10 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
     <header class="site-header">
       <nav class="site-nav" aria-label="주 메뉴">
         <h2 class="brand"><a href="/">디지털 접근성 아카이브</a></h2>
+        <div class="site-nav-links">
+          <a class:list={["site-nav-link", isPostsRoute && "is-active"]} href="/posts/">게시물</a>
+          <a class:list={["site-nav-link", isIssuesRoute && "is-active"]} href="/issues/">이슈 리포트</a>
+        </div>
       </nav>
     </header>
     <main
@@ -48,7 +58,7 @@ const isPostDetail = normalizedPath.startsWith("/posts/") && normalizedPath !== 
       class:list={[
         "site-main",
         isHome && "home-page",
-        isPostsIndex && "blog-page",
+        isContentIndex && "blog-page",
         isPostDetail && "post-page"
       ]}
     >

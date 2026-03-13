@@ -1,0 +1,34 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostCard from "../../components/PostCard.astro";
+import { getVisibleIssueReports } from "../../utils/posts";
+
+const allIssues = getVisibleIssueReports(await getCollection("posts"));
+const selectedTag = Astro.url.searchParams.get("tag");
+const issues = selectedTag
+  ? allIssues.filter((post) => post.data.tags.includes(selectedTag))
+  : allIssues;
+---
+
+<BaseLayout title="이슈 리포트 | 디지털 접근성 아카이브" description="디지털 접근성 이슈 리포트 목록">
+  <section>
+    <h1>이슈 리포트</h1>
+    {
+      selectedTag && (
+        <p>
+          태그 필터: <strong>#{selectedTag}</strong> · <a href="/issues/">초기화</a>
+        </p>
+      )
+    }
+    {issues.length === 0 ? (
+      <p>조건에 맞는 이슈 리포트가 없습니다.</p>
+    ) : (
+      <ul class="post-list">
+        {issues.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </ul>
+    )}
+  </section>
+</BaseLayout>

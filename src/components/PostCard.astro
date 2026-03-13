@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { getPostUrl, getTitleParts } from "../utils/posts";
 
 interface Props {
   post: CollectionEntry<"posts">;
@@ -7,15 +8,13 @@ interface Props {
 
 const { post } = Astro.props;
 const rawTitle = post.data.title.trim();
-const delimiterIndex = rawTitle.search(/[:：]/);
-const hasSubtitle = delimiterIndex > -1;
-const titleMain = hasSubtitle ? rawTitle.slice(0, delimiterIndex).trim() : rawTitle;
-const titleSub = hasSubtitle ? rawTitle.slice(delimiterIndex + 1).trim() : "";
+const { titleMain, titleSub } = getTitleParts(rawTitle);
+const href = getPostUrl(post);
 ---
 
 <li class="post-list-item">
   <h2 class="post-title">
-    <a href={`/posts/${post.slug}/`} aria-label={rawTitle}>
+    <a href={href} aria-label={rawTitle}>
       <span class="post-title-main">{titleMain}</span>
       {titleSub && <span class="post-title-sub">{titleSub}</span>}
     </a>
